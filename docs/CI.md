@@ -59,7 +59,8 @@ GitHub Secrets 的二进制存储方式见 [官方文档](https://docs.github.co
 
 先检查失败步骤日志，区分 SDK/依赖下载、离线检查、原生编译、签名和产物打包错误。
 Android 强制 `flutter config --jdk-dir="$JAVA_HOME"`，避免 runner 自带 Android Studio JBR
-覆盖 JDK 17；SDK packages 在构建前显式安装，Gradle wrapper 由 Flutter 在干净检出时补齐。
+覆盖 JDK 17；显式安装 Android command-line tools 16.0（12266719），不依赖 runner 预装
+`sdkmanager`。SDK packages 在构建前显式安装，Gradle wrapper 由 Flutter 在干净检出时补齐。
 Windows 使用带 VS 2022 的固定 runner，Linux 安装 GTK/CMake/Ninja 等开发依赖。
 
 缺少 Secrets 或证书不匹配时补齐正确材料，不用 debug 密钥替代 release。
