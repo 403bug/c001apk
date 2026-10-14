@@ -6,6 +6,12 @@
 Android 使用 Temurin JDK 17，所有 Flutter 命令从 `apps/flutter/` 执行。
 依赖安装使用 `--enforce-lockfile`，不在云端自动升级依赖；Action 引用固定到完整提交 SHA。
 
+2026-10-15 已实际跑通 [自动构建](https://github.com/TG-Twilight/c001apk/actions/runs/38597466728)
+和 [正式构建](https://github.com/TG-Twilight/c001apk/actions/runs/38597467657)：离线检查、
+Windows/Linux x86_64 release、Android 三 ABI debug/正式签名，以及可选 iOS arm64 无签名
+编译与架构检查均成功。下载后的正式 APK 已复核证书、包名、版本、不可调试状态和单 ABI；
+桌面归档已复核校验值、运行目录完整性与 x86_64 PE/ELF 架构。未在本轮安装或启动云端产物。
+
 ## 运行方式
 
 - 推送 `main` 或提交 PR，且改动 Flutter 工程或 workflow 时，自动执行离线检查和构建。

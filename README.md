@@ -54,7 +54,7 @@
 - [ ] Android 迁移到 Kotlin / Jetpack Compose，采用 Material 3 Expressive。
 - [ ] 完善 Flutter 桌面端随窗口尺寸变化的自适应布局与图片保存。
 
-当前重点维护 **Android 与 Windows**，代码仍为 Flutter。Android 包名为 `app.awavenue.c001apk`；其他平台保留上游工程，尚未验证。新包与旧包独立安装，登录及本地数据不会自动迁移。
+当前重点维护 **Android 与 Windows**，代码仍为 Flutter。Android 包名为 `app.awavenue.c001apk`；Linux 已通过云端 release 构建，iOS 已通过无签名编译检查，运行体验仍待验收。新包与旧包独立安装，登录及本地数据不会自动迁移。
 
 > [!NOTE]
 > 部分内容仍受登录、验证码和服务端接口限制，账号功能尚未完成验证。Windows 暂不支持应用内直接保存图片，可在浏览器中打开后保存。
