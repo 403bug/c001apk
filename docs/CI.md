@@ -29,6 +29,11 @@ release 包名包含 `pubspec.yaml` 的版本；桌面运行目录完整打包�
 正式 APK 和桌面归档提供 SHA-256 文件校验清单，release artifacts 保留 14 天。
 从运行详情的 Artifacts 下载；此 workflow 不创建 GitHub Release。
 
+当前版本文件为 `1.1.0+20261014`。Flutter 3.24.5 分包会在基础 Android `versionCode`
+上叠加 ABI 偏移：`armeabi-v7a` 为 +1000、`arm64-v8a` 为 +2000、`x86_64` 为 +4000。
+因此这批 APK 的实际编码分别为 `20262014`、`20263014`、`20265014`，
+`versionName` 均为 `1.1.0`；文件名仍使用 pubspec 版本。后续版本编码维护应沿用这一分包规则。
+
 桌面 ARM64 不列入当前目标：Flutter 3.24.5 官方 Windows/Linux SDK 发布包只有 x64，
 旧工具链的原生插件也未完成 ARM64 验证。移动端 arm64 不受这一决定影响。
 
