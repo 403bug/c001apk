@@ -20,10 +20,27 @@
 
 基于 [c001apk-flutter](https://github.com/bggRGjQaUbCoE/c001apk-flutter) 继续维护，修复 API、完善中文体验，让日常浏览保持轻巧。
 
-| 浏览内容 | 找到兴趣 | 按你的习惯 |
-| :---: | :---: | :---: |
-| 动态、文章、评论、用户空间 | 动态、应用、用户、话题与内容搜索 | 明暗主题、字体大小 |
-| 图文详情与图片查看 | 应用、话题及产品详情 | 本地收藏与屏蔽、浏览历史 |
+<table align="center">
+  <thead>
+    <tr>
+      <th align="center">浏览内容</th>
+      <th align="center">找到兴趣</th>
+      <th align="center">按你的习惯</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center">动态、文章、评论、用户空间</td>
+      <td align="center">动态、应用、用户、话题与内容搜索</td>
+      <td align="center">明暗主题、字体大小</td>
+    </tr>
+    <tr>
+      <td align="center">图文详情与图片查看</td>
+      <td align="center">应用、话题及产品详情</td>
+      <td align="center">本地收藏与屏蔽、浏览历史</td>
+    </tr>
+  </tbody>
+</table>
 
 ## 界面预览
 
@@ -50,14 +67,15 @@
 - [x] 更新公共 API 请求协议、签名与错误处理。
 - [x] 完成现有 Flutter 界面的一轮简体中文汉化。
 - [x] 恢复主要游客浏览流程，为部分受限动态、文章提供公开详情回退。
-- [ ] 完善账号登录、验证码与账号相关功能。
+- [x] 基本修复账号登录与状态管理，补齐验证码交互。
+- [ ] 继续完善验证码放行与部分账号操作。
 - [ ] Android 迁移到 Kotlin / Jetpack Compose，采用 Material 3 Expressive。
 - [ ] 完善 Flutter 桌面端随窗口尺寸变化的自适应布局与图片保存。
 
 当前重点维护 **Android 与 Windows**，代码仍为 Flutter。Android 包名为 `app.awavenue.c001apk`；Linux 已通过云端 release 构建，iOS 已通过无签名编译检查，运行体验仍待验收。新包与旧包独立安装，登录及本地数据不会自动迁移。
 
 > [!NOTE]
-> 部分内容仍受登录、验证码和服务端接口限制，账号功能尚未完成验证。Windows 暂不支持应用内直接保存图片，可在浏览器中打开后保存。
+> 部分内容仍受登录、验证码和服务端接口限制，验证码放行与部分账号操作仍需继续完善。Windows 暂不支持应用内直接保存图片，可在浏览器中打开后保存。
 
 ## 参与与致谢
 
