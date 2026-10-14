@@ -60,7 +60,7 @@
 
 ## 下载与进度
 
-正式安装包发布后可从 [Releases](https://github.com/TG-Twilight/c001apk/releases) 获取，也可以参照 [开发指南](docs/DEVELOPMENT.md) 自行构建。
+正式安装包可从 [Releases](https://github.com/TG-Twilight/c001apk/releases) 获取，也可以参照 [开发指南](docs/DEVELOPMENT.md) 自行构建。
 
 云端构建包可从 [Actions](https://github.com/TG-Twilight/c001apk/actions/workflows/build.yml) 的 Artifacts 下载，平台、签名与手动构建方式见 [云端构建指南](docs/CI.md)。
 

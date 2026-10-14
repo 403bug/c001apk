@@ -34,6 +34,8 @@ Windows/Linux x86_64 release、Android 三 ABI debug/正式签名，以及可选
 release 包名包含 `pubspec.yaml` 的版本；桌面运行目录完整打包，Linux 可执行权限通过 tar 保留。
 正式 APK 和桌面归档提供 SHA-256 文件校验清单，release artifacts 保留 14 天。
 从运行详情的 Artifacts 下载；此 workflow 不创建 GitHub Release。
+正式版也已由维护者发布至 [1.1.0-release](https://github.com/TG-Twilight/c001apk/releases/tag/1.1.0-release)，
+包含同次成功构建的五份分发包与统一校验清单，下载不受 Actions artifacts 保留天数影响。
 
 当前版本文件为 `1.1.0+20261014`。Flutter 3.24.5 分包会在基础 Android `versionCode`
 上叠加 ABI 偏移：`armeabi-v7a` 为 +1000、`arm64-v8a` 为 +2000、`x86_64` 为 +4000。
