@@ -279,5 +279,5 @@ jobs:
       - run: flutter build ios --release --no-codesign --no-pub
       - name: Check arm64 binary
         run: |
-          xcrun lipo -verify_arch arm64 build/ios/iphoneos/Runner.app/Runner
+          xcrun lipo build/ios/iphoneos/Runner.app/Runner -verify_arch arm64
           echo 'Unsigned compilation only; Apple signing and installable IPA are not configured.' >> "$GITHUB_STEP_SUMMARY"
