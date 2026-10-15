@@ -35,3 +35,16 @@ SDK 接入回调另核对 [网易易盾官方示例](https://github.com/yidun/ca
 `android/app/src/main/res/values-night-v31/colors.xml`。
 该项目采用 GPL-3.0，完整许可证见 [PiliPlus GPL-3.0](licenses/PiliPlus-GPL-3.0.txt)。
 仅参考系统颜色资源搭配，保留 c001apk 原有无穷符号和单色层，未引入 PiliPlus 图形素材。
+
+2026-10-15，账号切换入口、设置分类与文字层级参考同一项目
+提交 `868580c3edbe13f874583a3139b1f4d116d4cc0f` 的
+`lib/pages/setting/view.dart`、`lib/pages/setting/widgets/normal_item.dart`、
+`lib/utils/theme_utils.dart` 与账号管理相关实现。
+Flutter 页面和酷安多账号会话逻辑在本项目独立实现，沿用既有依赖及存储结构；
+参考项目的 GPL-3.0 许可证见上述链接。
+
+2026-10-15，c001apk 自身更新弹窗的更新说明、关闭提醒与分平台下载入口
+参考同一项目提交 `d529e0a2d90a2a3a04ef9847e6c14187852ea6ee` 的
+`lib/utils/update.dart`。本项目独立实现语义版本比较、24 小时限频、跳过版本、
+独立网络请求及设置持久化；没有采用参考实现按构建时间判断版本的方式。
+参考项目的 GPL-3.0 许可证见上述链接。

@@ -352,6 +352,7 @@ class NetworkRepo {
     required int page,
     required String? firstItem,
     required String? lastItem,
+    bool includeTop = true,
   }) async {
     return getListData(
       () => Request().get(Api.getUserFeed, queryParameters: {
@@ -360,7 +361,7 @@ class NetworkRepo {
         if (!firstItem.isNullOrEmpty) 'firstItem': firstItem,
         if (!lastItem.isNullOrEmpty) 'lastItem': lastItem,
         'showAnonymous': 0,
-        'isIncludeTop': 1,
+        'isIncludeTop': includeTop ? 1 : 0,
         'showDoing': 0,
       }),
     );

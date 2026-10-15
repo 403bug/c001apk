@@ -169,4 +169,15 @@ void main() {
     expect(prompts, 0);
     expect(adapter.requests, hasLength(1));
   });
+  test('A to B to A while verifying never replays the old write', () async {
+    (Request() as dynamic).captchaVerifier = (dynamic c) async {
+      GlobalData().sessionGeneration += 2;
+      return 'NEC:01234567:synthetic-proof';
+    };
+    await expectLater(
+        Request().post('https://api.coolapk.com/v6/feed/like'),
+        throwsA(isA<DioException>()
+            .having((e) => e.type, 'type', DioExceptionType.cancel)));
+    expect(adapter.requests, hasLength(1));
+  });
 }

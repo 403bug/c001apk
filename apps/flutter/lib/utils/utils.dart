@@ -73,7 +73,10 @@ class Utils {
   }
 
   static bool isSupportWebview() {
-    return Platform.isAndroid || Platform.isIOS || Platform.isMacOS;
+    return Platform.isAndroid ||
+        Platform.isIOS ||
+        Platform.isMacOS ||
+        Platform.isWindows;
   }
 
   static Future<void> onShareImg(String url) async {

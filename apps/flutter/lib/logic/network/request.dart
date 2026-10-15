@@ -26,6 +26,11 @@ class Request {
     CancelToken? cancelToken,
     extra,
   }) async {
+    final generation = GlobalData().sessionGeneration;
+    options = (options ?? Options()).copyWith(extra: {
+      ...?options?.extra,
+      'sessionGeneration': generation,
+    });
     final session =
         (GlobalData().isLogin, GlobalData().uid, GlobalData().token);
     final response = await dio.get(
@@ -34,14 +39,18 @@ class Request {
       options: options,
       cancelToken: cancelToken,
     );
-    return _verifyAndRetry(
+    _checkSession(generation, response);
+    final verified = await _verifyAndRetry(
         response,
         session,
-        options?.extra?['skipCaptcha'] == true,
+        generation,
+        options.extra?['skipCaptcha'] == true,
         (proof, challenge) => dio.get(url,
             queryParameters: {...?queryParameters, challenge.field: proof},
             options: options,
             cancelToken: cancelToken));
+    _checkSession(generation, verified);
+    return verified;
   }
 
   Future<Response<dynamic>> post(
@@ -52,6 +61,11 @@ class Request {
     CancelToken? cancelToken,
     extra,
   }) async {
+    final generation = GlobalData().sessionGeneration;
+    options = (options ?? Options()).copyWith(extra: {
+      ...?options?.extra,
+      'sessionGeneration': generation,
+    });
     final session =
         (GlobalData().isLogin, GlobalData().uid, GlobalData().token);
     // A multipart body becomes finalized during its first send; retain a copy
@@ -64,8 +78,9 @@ class Request {
       options: options,
       cancelToken: cancelToken,
     );
-    return _verifyAndRetry(
-        response, session, options?.extra?['skipCaptcha'] == true,
+    _checkSession(generation, response);
+    final verified = await _verifyAndRetry(
+        response, session, generation, options.extra?['skipCaptcha'] == true,
         (proof, challenge) {
       Object? verifiedData = retryData;
       if (retryData is FormData) {
@@ -82,16 +97,29 @@ class Request {
           options: options,
           cancelToken: cancelToken);
     });
+    _checkSession(generation, verified);
+    return verified;
+  }
+
+  void _checkSession(int generation, Response response) {
+    if (generation != GlobalData().sessionGeneration) {
+      throw DioException(
+          requestOptions: response.requestOptions,
+          type: DioExceptionType.cancel,
+          error: '账号已切换，已忽略旧请求');
+    }
   }
 
   Future<Response<dynamic>> _verifyAndRetry(
       Response<dynamic> response,
       (bool, String, String) session,
+      int generation,
       bool skip,
       Future<Response<dynamic>> Function(String, CaptchaChallenge)
           retry) async {
     final uri = response.requestOptions.uri;
     if (skip ||
+        generation != GlobalData().sessionGeneration ||
         _verifying ||
         captchaVerifier == null ||
         session !=
@@ -110,6 +138,7 @@ class Request {
       _verifying = false;
     }
     if (proof == null ||
+        generation != GlobalData().sessionGeneration ||
         !challenge.acceptsProof(proof) ||
         response.requestOptions.cancelToken?.isCancelled == true ||
         session !=

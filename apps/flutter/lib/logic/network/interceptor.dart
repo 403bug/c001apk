@@ -19,6 +19,14 @@ class ApiInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.extra['sessionGeneration'] != null &&
+        options.extra['sessionGeneration'] != GlobalData().sessionGeneration) {
+      handler.reject(DioException(
+          requestOptions: options,
+          type: DioExceptionType.cancel,
+          error: '账号已切换'));
+      return;
+    }
     try {
       final uri = options.uri;
       final publicFeed = uri.scheme == 'https' &&
@@ -35,9 +43,9 @@ class ApiInterceptor extends Interceptor {
         options.headers['Accept'] =
             'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7';
         options.headers['X-Requested-With'] = Constants.APP_ID;
-        if (GlobalData().SESSID.isNotEmpty) {
+        if (GlobalData().loginSession.isNotEmpty) {
           options.headers['Cookie'] =
-              '${GlobalData().SESSID}; forward=https://www.coolapk.com';
+              '${GlobalData().loginSession}; forward=https://www.coolapk.com';
         }
         if (options.method == 'POST') {
           options.headers['X-Requested-With'] = Constants.REQUEST_WITH;

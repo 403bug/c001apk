@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:c001apk_flutter/logic/network/request.dart';
+import 'package:c001apk_flutter/logic/accounts/account_store.dart';
+import 'package:c001apk_flutter/pages/message/message_controller.dart';
 import 'package:c001apk_flutter/constants/constants.dart';
 import 'package:c001apk_flutter/main.dart';
 import 'package:c001apk_flutter/components/settings/drop_down_menu_item.dart';
@@ -126,12 +128,47 @@ void main() {
     expect(material.backButtonTooltip, '返回');
     expect(material.copyButtonLabel, '复制');
     expect(material.pasteButtonLabel, '粘贴');
-    expect(find.text('首页'), findsOneWidget);
+    expect(find.text('主页'), findsOneWidget);
+    expect(
+        tester
+            .widget<NavigationBar>(find.byType(NavigationBar))
+            .destinations
+            .cast<NavigationDestination>()
+            .map((item) => item.label),
+        ['主页', '关注', '我的']);
+    expect(find.widgetWithText(Tab, '关注'), findsNothing);
+    await tester.tap(find.widgetWithText(NavigationDestination, '关注'));
+    await tester.pumpAndSettle();
+    expect(find.text('本地关注动态'), findsOneWidget);
+    expect(find.textContaining('还没有本地关注的用户'), findsOneWidget);
     expect(find.text('Home'), findsNothing);
     tester.view.physicalSize = const Size(1400, 900);
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.text('首页'), findsOneWidget);
+    expect(find.text('主页'), findsOneWidget);
+    expect(
+        tester
+            .widget<NavigationRail>(find.byType(NavigationRail))
+            .selectedIndex,
+        1);
+    expect(find.text('本地关注动态'), findsOneWidget);
+    await tester.tap(find.descendant(
+        of: find.byType(NavigationRail),
+        matching: find.byIcon(Icons.person_outline)));
+    await tester.pumpAndSettle();
+    expect(
+        tester
+            .widget<NavigationRail>(find.byType(NavigationRail))
+            .selectedIndex,
+        2);
+    expect(find.text('点击登录'), findsOneWidget);
+    expect(find.text('粉丝', skipOffstage: false), findsNothing);
+    final localCard = find
+        .ancestor(of: find.text('本地收藏'), matching: find.byType(Material))
+        .last;
+    final divider = find.byType(Divider).first;
+    expect(tester.getTopLeft(localCard).dy - tester.getBottomLeft(divider).dy,
+        lessThan(20));
     expect(find.text('Settings'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -181,7 +218,9 @@ void main() {
         }));
     await tester.pumpWidget(const C001APKAPP());
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.text('设置'));
+    await tester.tap(find.byTooltip('设置'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('外观与字号'));
     await tester.pumpAndSettle();
     final picker = find.byWidgetPredicate((widget) =>
         widget is DropDownMenuItem &&
@@ -205,6 +244,8 @@ void main() {
     expect(tester.widget<DropdownButton<int>>(button).value, 4);
     await tester.tap(button);
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text(Constants.themeType[0]), -120,
+        scrollable: find.byType(Scrollable).last);
     expect(find.text(Constants.themeType[0]), findsOneWidget);
     expect(
         tester
@@ -254,5 +295,55 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
     await tester.pumpWidget(const SizedBox.shrink());
     GlobalData().isLogin = false;
+  });
+
+  testWidgets('switching accounts rebuilds mounted pages and closes old routes',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.runAsync(() => AccountStore().saveLogin(
+        uid: '321',
+        username: 'synthetic-current',
+        token: 'synthetic-current-token'));
+    await tester.pumpWidget(const C001APKAPP());
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(NavigationDestination, '关注'));
+    await tester.pumpAndSettle();
+    expect(find.text('账号关注'), findsOneWidget);
+    await tester.tap(find.text('悄悄关注'));
+    await tester.pumpAndSettle();
+    expect(find.text('悄悄关注动态'), findsOneWidget);
+    await tester.tap(find.widgetWithText(NavigationDestination, '我的'));
+    await tester.pumpAndSettle();
+    final oldController = Get.find<MessageController>();
+    oldController.firstList.value = [7, 8, 9];
+    await tester.pump();
+    expect(find.text('粉丝'), findsOneWidget);
+    expect(find.text('7'), findsOneWidget);
+    expect(find.byTooltip('账号管理'), findsOneWidget);
+    await tester.tap(find.byTooltip('账号管理'));
+    await tester.pumpAndSettle();
+    expect(Get.currentRoute, '/accounts');
+    await tester.runAsync(() async {
+      await tester.tap(find.text('使用游客模式'));
+      await GStorage.settings.flush();
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+    });
+    await tester.pumpAndSettle();
+    expect(Get.currentRoute, '/');
+    expect(GlobalData().isLogin, isFalse);
+    expect(oldController.isClosed, isTrue);
+    expect(identical(oldController, Get.find<MessageController>()), isFalse);
+    expect(find.text('点击登录'), findsOneWidget);
+    await tester.runAsync(() => AccountStore().switchTo('321'));
+    await tester.pumpAndSettle();
+    expect(GlobalData().uid, '321');
+    expect(GlobalData().isLogin, isTrue);
+    expect(find.text('点击登录'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(() => AccountStore().useGuest());
   });
 }

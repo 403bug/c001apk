@@ -31,16 +31,20 @@ Windows/Linux x86_64 release、Android 三 ABI debug/正式签名，以及可选
 | Android release | `ubuntu-22.04` | `arm64-v8a` / `armeabi-v7a` / `x86_64` 正式签名 APK，分别上传 |
 | iOS（可选） | `macos-14` | arm64 无签名编译日志 |
 
-release 包名包含 `pubspec.yaml` 的版本；桌面运行目录完整打包，Linux 可执行权限通过 tar 保留。
+每次运行先按 UTC+8 日期生成 `YYYYMMDD` 构建号，所有平台共用同一日期；
+通过 `dart tool/update_build_date.dart` 在 runner 更新 `pubspec.yaml`，保留语义版本。
+内置版本、关于页与 release 文件名使用更新后的同一版本，跨日完成的任务也不会各自换日期。
+此步骤仅修改 runner 工作区，不自动提交回仓库。本地构建可在 `apps/flutter/` 运行同一命令刷新日期。
+桌面运行目录完整打包，Linux 可执行权限通过 tar 保留。
 正式 APK 和桌面归档提供 SHA-256 文件校验清单，release artifacts 保留 14 天。
 从运行详情的 Artifacts 下载；此 workflow 不创建 GitHub Release。
 正式版也已由维护者发布至 [1.1.0-release](https://github.com/TG-Twilight/c001apk/releases/tag/1.1.0-release)，
 包含同次成功构建的五份分发包与统一校验清单，下载不受 Actions artifacts 保留天数影响。
 
-当前版本文件为 `1.1.0+20261014`。Flutter 3.24.5 分包会在基础 Android `versionCode`
+当前版本文件为 `1.2.0+20261015`，本次基础构建号保持不变，后续云端构建日期仍按既有规则自动刷新。Flutter 3.24.5 分包会在基础 Android `versionCode`
 上叠加 ABI 偏移：`armeabi-v7a` 为 +1000、`arm64-v8a` 为 +2000、`x86_64` 为 +4000。
-因此这批 APK 的实际编码分别为 `20262014`、`20263014`、`20265014`，
-`versionName` 均为 `1.1.0`；文件名仍使用 pubspec 版本。后续版本编码维护应沿用这一分包规则。
+因此以 `20261015` 为基础时，APK 的实际编码分别为 `20262015`、`20263015`、`20265015`，
+`versionName` 均为 `1.2.0`；文件名仍使用 pubspec 版本。后续版本编码维护应沿用这一分包规则。
 
 桌面 ARM64 不列入当前目标：Flutter 3.24.5 官方 Windows/Linux SDK 发布包只有 x64，
 旧工具链的原生插件也未完成 ARM64 验证。移动端 arm64 不受这一决定影响。

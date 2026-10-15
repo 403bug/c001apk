@@ -13,7 +13,6 @@ import '../../pages/message/message_controller.dart';
 import '../../pages/noitfication/notification_page.dart';
 import '../../utils/extensions.dart';
 import '../../utils/global_data.dart';
-import '../../utils/storage_util.dart';
 
 class MessagePage extends StatefulWidget {
   const MessagePage({super.key});
@@ -62,9 +61,13 @@ class _MessagePageState extends State<MessagePage>
   }
 
   Future<void> _onRefresh() async {
+    if (!mounted || !GlobalData().isLogin) return;
+    final generation = GlobalData().sessionGeneration;
     _messageController.onReset();
     await _messageController.getProfile();
+    if (!mounted || generation != GlobalData().sessionGeneration) return;
     await _messageController.checkCount();
+    if (!mounted || generation != GlobalData().sessionGeneration) return;
     await _messageController.onGetData();
     _isRefreshing = false;
   }
@@ -146,125 +149,100 @@ class _MessagePageState extends State<MessagePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Column(
-      children: [
-        SizedBox(height: MediaQuery.of(context).padding.top + 10),
-        Obx(
-          () => MessageHeaderCard(
-            userInfo: _messageController.userInfo.value,
-            onLogin: () async {
-              if ((await Get.toNamed('/login')) == true) {
-                _onRefresh();
-              }
-            },
-            onLogout: () {
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text('确定退出登录？'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Get.back(),
-                          child: const Text('取消'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            _messageController.firstList.clear();
-                            _messageController.thirdList.clear();
-
-                            GStorage.setUid('');
-                            GStorage.setUsername('');
-                            GStorage.setToken('');
-                            GStorage.setUserAvatar('');
-                            GStorage.setLevel(0);
-                            GStorage.setExp(0);
-                            GStorage.setNextExp(1);
-                            GStorage.setIsLogin(false);
-                            _messageController
-                                .setLoadingState(LoadingState.loading());
-                            _messageController
-                                .setFooterState(LoadingState.empty());
-                            Get.back();
-                            Get.forceAppUpdate();
-                          },
-                          child: const Text('确定'),
-                        ),
-                      ],
-                    );
-                  });
-            },
-          ),
-        ),
-        const SizedBox(height: 10),
-        const Divider(height: 1),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () async {
-              if (GlobalData().isLogin) {
-                _isRefreshing = true;
-                await _onRefresh();
-              } else {
-                return Future.value();
-              }
-            },
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.all(10),
-                  sliver: SliverList.separated(
-                    itemCount: 7,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return Obx(
-                          () => messageFirstCard(
-                            GlobalData().isLogin,
-                            context,
-                            _messageController.firstList,
-                          ),
-                        );
-                      } else if (index == 1) {
-                        return messageSeconfCard(GlobalData().isLogin, context);
-                      } else if (index >= 2 && index <= 6) {
-                        return Obx(
-                          () => messageThirdCard(
-                            context,
-                            _backgroundList[index - 2],
-                            _iconList[index - 2],
-                            _titleList[index - 2],
-                            _messageController.thirdList.getOrNull(index - 2),
-                            () {
-                              if (GlobalData().isLogin) {
-                                Get.toNamed('/notification', arguments: {
-                                  'type': NotificationType.values[index - 2]
-                                });
-                                int? count = _messageController.thirdList
-                                    .getOrNull(index - 2);
-                                if (count != null && count > 0) {
-                                  _messageController.thirdList[index - 2] =
-                                      null;
-                                }
-                              }
-                            },
-                          ),
-                        );
-                      }
-                      return const SizedBox();
-                    },
-                    separatorBuilder: (_, index) => const SizedBox(height: 10),
-                  ),
-                ),
-                if (GlobalData().isLogin)
-                  Obx(() =>
-                      _buildMessage(_messageController.loadingState.value)),
-              ],
+    return Scaffold(
+      appBar: AppBar(title: const Text('我的'), actions: [
+        IconButton(
+            onPressed: () => Get.toNamed('/accounts'),
+            icon: const Icon(Icons.switch_account_outlined),
+            tooltip: '账号管理'),
+        IconButton(
+            onPressed: () => Get.toNamed('/settings'),
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: '设置'),
+      ]),
+      body: Column(
+        children: [
+          const SizedBox(height: 10),
+          Obx(
+            () => MessageHeaderCard(
+              userInfo: _messageController.userInfo.value,
+              onLogin: () => Get.toNamed('/login'),
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          const Divider(height: 1),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                if (GlobalData().isLogin) {
+                  _isRefreshing = true;
+                  await _onRefresh();
+                } else {
+                  return Future.value();
+                }
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.all(10),
+                    sliver: SliverList.separated(
+                      itemCount: GlobalData().isLogin ? 7 : 6,
+                      itemBuilder: (context, itemIndex) {
+                        final index =
+                            itemIndex + (GlobalData().isLogin ? 0 : 1);
+                        if (index == 0) {
+                          return Obx(
+                            () => messageFirstCard(
+                              GlobalData().isLogin,
+                              context,
+                              _messageController.firstList,
+                            ),
+                          );
+                        } else if (index == 1) {
+                          return messageSeconfCard(
+                              GlobalData().isLogin, context);
+                        } else if (index >= 2 && index <= 6) {
+                          return Obx(
+                            () => messageThirdCard(
+                              context,
+                              _backgroundList[index - 2],
+                              _iconList[index - 2],
+                              _titleList[index - 2],
+                              _messageController.thirdList.getOrNull(index - 2),
+                              () {
+                                if (GlobalData().isLogin) {
+                                  Get.toNamed('/notification', arguments: {
+                                    'type': NotificationType.values[index - 2]
+                                  });
+                                  int? count = _messageController.thirdList
+                                      .getOrNull(index - 2);
+                                  if (count != null && count > 0) {
+                                    _messageController.thirdList[index - 2] =
+                                        null;
+                                  }
+                                }
+                              },
+                            ),
+                          );
+                        }
+                        return const SizedBox();
+                      },
+                      separatorBuilder: (_, index) =>
+                          const SizedBox(height: 10),
+                    ),
+                  ),
+                  if (GlobalData().isLogin)
+                    Obx(() =>
+                        _buildMessage(_messageController.loadingState.value)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

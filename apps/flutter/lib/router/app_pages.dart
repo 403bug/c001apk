@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../pages/app/app_page.dart';
+import '../pages/accounts/accounts_page.dart';
+import '../pages/settings/settings_page.dart';
 import '../pages/blacklist/black_list_page.dart';
 import '../pages/carousel/carousel_page.dart';
 import '../pages/chat/chat_page.dart';
@@ -37,6 +39,8 @@ class AppPages {
   }
 
   static final List<GetPage> getPages = [
+    _getPage(name: '/settings', page: () => const SettingsPage()),
+    _getPage(name: '/accounts', page: () => const AccountsPage()),
     _getPage(
       name: '/',
       page: () => const MainPage(),

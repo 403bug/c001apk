@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
@@ -31,6 +33,7 @@ class _HomeFeedPageState extends State<HomeFeedPage>
 
   late final bool isLogin = GlobalData().isLogin;
   AnimationController? _fabAnimationCtr;
+  StreamSubscription<int>? _returnTopSubscription;
   late bool _isFabVisible = true;
 
   late final followType = GStorage.followType;
@@ -58,6 +61,7 @@ class _HomeFeedPageState extends State<HomeFeedPage>
 
   @override
   void dispose() {
+    _returnTopSubscription?.cancel();
     _homeFeedController.scrollController?.removeListener(() {});
     _homeFeedController.scrollController?.dispose();
     _fabAnimationCtr?.dispose();
@@ -76,7 +80,8 @@ class _HomeFeedPageState extends State<HomeFeedPage>
     _homeFeedController.returnTopController =
         Get.find<ReturnTopController>(tag: 'home');
 
-    _homeFeedController.returnTopController?.index.listen((index) {
+    _returnTopSubscription =
+        _homeFeedController.returnTopController?.index.listen((index) {
       if (index == TabType.values.indexOf(widget.tabType)) {
         _homeFeedController.animateToTop();
       }
