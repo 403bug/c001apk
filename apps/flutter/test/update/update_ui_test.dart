@@ -17,6 +17,22 @@ import 'package:dio/dio.dart';
 
 import 'app_update_test.dart' show releaseJson, ReleaseAdapter;
 
+// Dio streams and Hive writes use real async work, while animations use the
+// widget test clock. Advance both until the observable state is ready.
+Future<void> waitForUpdateUi(WidgetTester tester, Finder finder) async {
+  for (var attempt = 0; attempt < 200; attempt++) {
+    await tester.pump(const Duration(milliseconds: 20));
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 10)));
+    if (finder.evaluate().isNotEmpty) {
+      await tester.pump(const Duration(milliseconds: 500));
+      return;
+    }
+  }
+  expect(finder, findsWidgets,
+      reason: 'Update UI did not reach the expected state');
+}
+
 void main() {
   late Directory directory;
   setUpAll(() async {
@@ -33,29 +49,27 @@ void main() {
     testWidgets('manual check applies $label and can still check again',
         (tester) async {
       final preferences = UpdatePreferences(GStorage.settings);
+      final adapter = ReleaseAdapter()..pending = Completer<void>();
       final service = UpdateService(
           preferences: preferences,
-          dio: Dio()..httpClientAdapter = ReleaseAdapter(),
+          dio: Dio()..httpClientAdapter = adapter,
           currentVersion: () async => '1.1.5',
           clock: () => DateTime.utc(2026, 10, 15));
       await tester.pumpWidget(
           MaterialApp(home: Scaffold(body: UpdateCheckTile(service: service))));
       await tester.runAsync(() async {
+        Timer(const Duration(milliseconds: 250),
+            () => adapter.pending!.complete());
         await tester.tap(find.text('检查更新'));
-        await Future<void>.delayed(const Duration(milliseconds: 30));
       });
       // The tile's loading indicator remains mounted behind the modal.
-      await tester.pump(const Duration(milliseconds: 500));
+      await waitForUpdateUi(tester, find.text('发现新版本'));
       expect(find.text('发现新版本'), findsOneWidget);
       await tester.runAsync(() async {
         await tester.tap(find.text(label));
         await GStorage.settings.flush();
       });
-      await tester.pumpAndSettle();
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 30));
-        await GStorage.settings.flush();
-      });
+      await waitForUpdateUi(tester, find.text('检查更新'));
       await tester.pumpAndSettle();
       expect(preferences.automaticAllowed(DateTime.utc(2026, 10, 15)),
           label == '跳过');
@@ -63,19 +77,14 @@ void main() {
       expect(preferences.enabled, true);
       await tester.runAsync(() async {
         await tester.tap(find.text('检查更新'));
-        await Future<void>.delayed(const Duration(milliseconds: 30));
       });
-      await tester.pump(const Duration(milliseconds: 500));
+      await waitForUpdateUi(tester, find.text('发现新版本'));
       expect(find.text('发现新版本'), findsOneWidget);
       await tester.runAsync(() async {
         await tester.tap(find.text('稍后'));
         await GStorage.settings.flush();
       });
-      await tester.pumpAndSettle();
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 30));
-        await GStorage.settings.flush();
-      });
+      await waitForUpdateUi(tester, find.text('检查更新'));
       await tester.pumpAndSettle();
       await tester.pumpWidget(const SizedBox.shrink());
     });
@@ -91,23 +100,15 @@ void main() {
         MaterialApp(home: Scaffold(body: UpdateCheckTile(service: service))));
     await tester.runAsync(() async {
       await tester.tap(find.text('检查更新'));
-      await Future<void>.delayed(const Duration(milliseconds: 30));
     });
+    await waitForUpdateUi(tester, find.textContaining('请求过于频繁'));
     await tester.pumpAndSettle();
     expect(find.textContaining('请求过于频繁'), findsOneWidget);
     adapter.status = 200;
     await tester.runAsync(() async {
       await tester.tap(find.text('检查更新'));
-      await Future<void>.delayed(const Duration(milliseconds: 30));
     });
-    // Dio's response stream crosses real and fake async zones on retry.
-    for (var i = 0; i < 50; i++) {
-      await tester.pump(const Duration(milliseconds: 20));
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-      });
-      if (find.text('正在检查更新…').evaluate().isEmpty) break;
-    }
+    await waitForUpdateUi(tester, find.text('检查更新'));
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
@@ -145,14 +146,7 @@ void main() {
       adapter.pending!.complete();
       await Future<void>.delayed(const Duration(milliseconds: 30));
     });
-    for (var i = 0; i < 50; i++) {
-      await tester.pump(const Duration(milliseconds: 20));
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-      });
-      if (find.text('发现新版本').evaluate().isNotEmpty) break;
-    }
-    await tester.pump(const Duration(milliseconds: 500));
+    await waitForUpdateUi(tester, find.text('发现新版本'));
     expect(find.text('发现新版本'), findsOneWidget);
     expect(adapter.requests, hasLength(2));
     await tester.tap(find.text('稍后'));
@@ -184,14 +178,11 @@ void main() {
           MaterialApp(home: Scaffold(body: UpdateCheckTile(service: service))));
       await tester.runAsync(() async {
         await tester.tap(find.text('检查更新'));
-        await Future<void>.delayed(const Duration(milliseconds: 30));
       });
-      await tester.pump(const Duration(milliseconds: 500));
+      await waitForUpdateUi(tester, find.text('发现新版本'));
       await tester.tap(find.text('更新'));
       await tester.pump(const Duration(milliseconds: 500));
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 30));
-      });
+      await waitForUpdateUi(tester, find.text('检查更新'));
       await tester.pumpAndSettle();
       expect(opened, hasLength(2));
       expect(opened.last,
@@ -235,14 +226,7 @@ void main() {
       adapter.pending!.complete();
       await Future<void>.delayed(const Duration(milliseconds: 30));
     });
-    for (var i = 0; i < 50; i++) {
-      await tester.pump(const Duration(milliseconds: 20));
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-      });
-      if (find.text('发现新版本').evaluate().isNotEmpty) break;
-    }
-    await tester.pump(const Duration(milliseconds: 500));
+    await waitForUpdateUi(tester, find.text('发现新版本'));
     expect(find.text('发现新版本'), findsOneWidget);
     await tester.tap(find.text('稍后'));
     await tester.pumpAndSettle();
