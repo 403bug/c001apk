@@ -109,7 +109,7 @@ EXE、DLL 和 `data/`；Android 分别生成 `build/app/outputs/flutter-apk/` �
 | Windows | `x86_64` | 本地及云端 release 已构建，下载包已复核 |
 | Linux | `x86_64` | 云端 release 已构建，下载包已复核；运行体验待验收 |
 | Android | `arm64-v8a`、`armeabi-v7a`、`x86_64` | 云端独立 APK 已构建、下载验签；结果见 Actions |
-| iOS | `arm64`（真机） | 云端无签名编译/架构检查已通过；Apple 签名与真机运行待实施 |
+| iOS | `arm64`（真机） | 云端可构建未签名 IPA；Apple 签名与真机运行待实施，构建结果见 Actions |
 
 桌面 `x86_32` 和 ARM64 不列入本轮发布矩阵。
 桌面 `x86_64` 通常也称 x64/amd64，`aarch64` 通常也称 ARM64；Android 使用其 ABI 命名。
@@ -143,7 +143,7 @@ flutter build apk --release --split-per-abi
 
 GitHub Actions 配置见 [云端构建指南](CI.md) 与 [Build workflow](../.github/workflows/build.yml)。
 普通 push/PR 执行离线检查、Windows/Linux x86_64 release 和 Android debug 构建；
-手动运行可生成正式签名的 Android 三 ABI APK，并选择执行 iOS arm64 无签名编译检查。
+手动运行可生成正式签名的 Android 三 ABI APK，并选择构建 iOS arm64 未签名 IPA（安装前需自行签名）。
 Android 签名使用 Actions Secrets `ANDROID_KEYSTORE_BASE64` 和 `REVIA_KS_PASS`：
 runner 临时恢复 JKS，并以 `KEYSTORE`、`KEY_ALIAS` 和密码环境变量传给构建。
 JKS、密码及其 Base64 不进入 Git 历史、公开附件或构建 artifacts，临时 JKS 在结束时清理。
@@ -166,7 +166,7 @@ dart run build_runner build --delete-conflicting-outputs
 普通 `flutter test` 使用离线回归与合成设备夹具，在线检查默认跳过。测试覆盖请求签名、头部隔离、存储迁移、响应错误、游客详情回退、中文界面及缓存清理等。
 
 账号回归还覆盖不完整登录检查、失败资料读取、验证期间切换账号、验证码取消和单次重试、文本写请求编码、私密发布字段，以及网页登录 Cookie 清理。
-登录后受限详情可读取公开正文，界面会说明账号点赞状态尚未取得；Android/iOS 提供手动人机验证入口。完成验证不保证服务端解除其他风控，Windows 应用内人机验证暂不支持。
+登录后受限详情可读取公开正文，界面会说明账号点赞状态尚未取得；Android/iOS 提供手动人机验证入口，Windows 通过 WebView2 提供网页登录与人机验证页面。完成验证不保证服务端解除其他风控。
 
 需要主动检查游客只读接口时，可单独执行：
 

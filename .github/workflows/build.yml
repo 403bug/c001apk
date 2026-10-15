@@ -17,7 +17,7 @@ on:
         type: boolean
         default: true
       ios:
-        description: 'Also check unsigned iOS arm64 compilation (not an installable IPA)'
+        description: 'Also build an unsigned iOS arm64 IPA (requires your own signing)'
         type: boolean
         default: false
 
@@ -272,7 +272,7 @@ jobs:
           retention-days: 14
 
   ios:
-    name: iOS arm64 unsigned compilation
+    name: iOS arm64 unsigned IPA
     if: github.event_name == 'workflow_dispatch' && inputs.ios
     needs: checks
     runs-on: macos-14
@@ -293,4 +293,26 @@ jobs:
       - name: Check arm64 binary
         run: |
           xcrun lipo build/ios/iphoneos/Runner.app/Runner -verify_arch arm64
-          echo 'Unsigned compilation only; Apple signing and installable IPA are not configured.' >> "$GITHUB_STEP_SUMMARY"
+          plutil -extract CFBundleIdentifier raw build/ios/iphoneos/Runner.app/Info.plist
+          plutil -extract CFBundleShortVersionString raw build/ios/iphoneos/Runner.app/Info.plist
+          plutil -extract CFBundleVersion raw build/ios/iphoneos/Runner.app/Info.plist
+          test ! -f build/ios/iphoneos/Runner.app/embedded.mobileprovision
+      - name: Package unsigned IPA
+        run: |
+          version=$(sed -n 's/^version: //p' pubspec.yaml | tr -d '\r')
+          distribution="$PWD/build/distribution"
+          mkdir -p "$distribution/ios-staging/Payload"
+          ditto build/ios/iphoneos/Runner.app "$distribution/ios-staging/Payload/Runner.app"
+          archive="c001apk-$version-ios-arm64-unsigned.ipa"
+          (cd "$distribution/ios-staging" && ditto -c -k --keepParent Payload "../$archive")
+          unzip -t "$distribution/$archive"
+          (cd "$distribution" && shasum -a 256 "$archive" > SHA256SUMS.txt)
+          echo 'Unsigned arm64 IPA: sign it with your own Apple certificate and provisioning profile before installation. No iPhone runtime acceptance has been performed.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: c001apk-ios-arm64-unsigned
+          path: |
+            apps/flutter/build/distribution/*-ios-arm64-unsigned.ipa
+            apps/flutter/build/distribution/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14

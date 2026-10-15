@@ -17,7 +17,7 @@ Windows/Linux x86_64 release、Android 三 ABI debug/正式签名，以及可选
 - 推送 `main` 或提交 PR，且改动 Flutter 工程或 workflow 时，自动执行离线检查和构建。
 - 在 Actions → Build → Run workflow 手动运行，默认 `android_release=true`，生成正式签名 Android APK。
 - 没有正式签名 Secrets 的 fork 可将 `android_release` 取消勾选，执行 debug 构建。
-- 勾选 `ios` 可额外执行 iOS 真机 arm64 的无签名编译检查；它不生成可安装 IPA。
+- 勾选 `ios` 可额外构建 iOS 真机 arm64 未签名 IPA，附件名称含 `unsigned`；安装前需要自行签名，尚未做 iPhone 实机验收。
 
 静态分析遇 error/warning 时失败；既有 info 级命名等提示继续显示，暂不阻断。
 普通测试只使用离线合成夹具，两项在线检查默认跳过。CI 不操作真实账号。
@@ -29,14 +29,14 @@ Windows/Linux x86_64 release、Android 三 ABI debug/正式签名，以及可选
 | Linux release | `ubuntu-22.04` | x86_64 tar.gz，包含完整 bundle |
 | Android debug | `ubuntu-22.04` | 三 ABI 开发证书 APK，保留 7 天 |
 | Android release | `ubuntu-22.04` | `arm64-v8a` / `armeabi-v7a` / `x86_64` 正式签名 APK，分别上传 |
-| iOS（可选） | `macos-14` | arm64 无签名编译日志 |
+| iOS（可选） | `macos-14` | arm64 未签名 IPA 与 SHA-256 清单，需自行签名 |
 
 每次运行先按 UTC+8 日期生成 `YYYYMMDD` 构建号，所有平台共用同一日期；
 通过 `dart tool/update_build_date.dart` 在 runner 更新 `pubspec.yaml`，保留语义版本。
 内置版本、关于页与 release 文件名使用更新后的同一版本，跨日完成的任务也不会各自换日期。
 此步骤仅修改 runner 工作区，不自动提交回仓库。本地构建可在 `apps/flutter/` 运行同一命令刷新日期。
 桌面运行目录完整打包，Linux 可执行权限通过 tar 保留。
-正式 APK 和桌面归档提供 SHA-256 文件校验清单，release artifacts 保留 14 天。
+正式 APK、桌面归档和 iOS 未签名 IPA 提供 SHA-256 文件校验清单，release artifacts 保留 14 天。
 从运行详情的 Artifacts 下载；此 workflow 不创建 GitHub Release。
 正式版也已由维护者发布至 [1.1.0-release](https://github.com/TG-Twilight/c001apk/releases/tag/1.1.0-release)，
 包含同次成功构建的五份分发包与统一校验清单，下载不受 Actions artifacts 保留天数影响。
@@ -81,5 +81,6 @@ Android 强制 `flutter config --jdk-dir="$JAVA_HOME"`，避免 runner 自带 An
 Windows 使用带 VS 2022 的固定 runner，Linux 安装 GTK/CMake/Ninja 等开发依赖。
 
 缺少 Secrets 或证书不匹配时补齐正确材料，不用 debug 密钥替代 release。
-iOS 只检查编译，后续正式分发需要独立的 Apple 证书、描述文件与签名配置。
+iOS 先检查 arm64 二进制与版本信息，再将 `Runner.app` 放入 `Payload/`，保留目录结构打包为未签名 IPA。
+IPA 仅供自行签名使用；Apple 证书、描述文件与正式签名仍需独立配置，不使用 Android 密钥。
 一次云端构建成功只证明该提交的检查和编译，不代表全部线上 API 或真实界面已验收。
