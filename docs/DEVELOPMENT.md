@@ -109,7 +109,7 @@ EXE、DLL 和 `data/`；Android 分别生成 `build/app/outputs/flutter-apk/` �
 | Windows | `x86_64` | 本地及云端 release 已构建，下载包已复核 |
 | Linux | `x86_64` | 云端 release 已构建，下载包已复核；运行体验待验收 |
 | Android | `arm64-v8a`、`armeabi-v7a`、`x86_64` | 云端独立 APK 已构建、下载验签；结果见 Actions |
-| iOS | `arm64`（真机） | 云端可构建未签名 IPA；Apple 签名与真机运行待实施，构建结果见 Actions |
+| iOS | `arm64`（真机） | 云端未签名 IPA 构建、架构与校验值检查已通过；Apple 签名与真机运行待实施 |
 
 桌面 `x86_32` 和 ARM64 不列入本轮发布矩阵。
 桌面 `x86_64` 通常也称 x64/amd64，`aarch64` 通常也称 ARM64；Android 使用其 ABI 命名。

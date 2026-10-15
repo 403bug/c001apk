@@ -6,11 +6,12 @@
 Android 使用 Temurin JDK 17，所有 Flutter 命令从 `apps/flutter/` 执行。
 依赖安装使用 `--enforce-lockfile`，不在云端自动升级依赖；Action 引用固定到完整提交 SHA。
 
-2026-10-15 已实际跑通 [自动构建](https://github.com/TG-Twilight/c001apk/actions/runs/38597466728)
-和 [正式构建](https://github.com/TG-Twilight/c001apk/actions/runs/38597467657)：离线检查、
-Windows/Linux x86_64 release、Android 三 ABI debug/正式签名，以及可选 iOS arm64 无签名
-编译与架构检查均成功。下载后的正式 APK 已复核证书、包名、版本、不可调试状态和单 ABI；
-桌面归档已复核校验值、运行目录完整性与 x86_64 PE/ELF 架构。未在本轮安装或启动云端产物。
+2026-10-15 已实际跑通 [自动构建](https://github.com/TG-Twilight/c001apk/actions/runs/38715018626)
+和 [正式构建](https://github.com/TG-Twilight/c001apk/actions/runs/38715020281)：离线检查、
+Windows/Linux x86_64 release、Android 三 ABI debug/正式签名，以及可选 iOS arm64 未签名
+IPA 构建与架构检查均成功。下载后的正式 APK 已复核证书、包名、版本、不可调试状态和单 ABI；
+桌面归档与 IPA 已复核校验值、运行目录完整性及架构。Windows 云端包已同步本机安装并验证正常退出，
+Android arm64 已保留数据覆盖安装；Linux / iOS 运行体验仍待验收。
 
 ## 运行方式
 
@@ -38,8 +39,8 @@ Windows/Linux x86_64 release、Android 三 ABI debug/正式签名，以及可选
 桌面运行目录完整打包，Linux 可执行权限通过 tar 保留。
 正式 APK、桌面归档和 iOS 未签名 IPA 提供 SHA-256 文件校验清单，release artifacts 保留 14 天。
 从运行详情的 Artifacts 下载；此 workflow 不创建 GitHub Release。
-正式版也已由维护者发布至 [1.1.0-release](https://github.com/TG-Twilight/c001apk/releases/tag/1.1.0-release)，
-包含同次成功构建的五份分发包与统一校验清单，下载不受 Actions artifacts 保留天数影响。
+正式版也已由维护者发布至 [1.2.0-release](https://github.com/TG-Twilight/c001apk/releases/tag/1.2.0-release)，
+包含同次成功构建的六份分发包与统一校验清单，下载不受 Actions artifacts 保留天数影响。
 
 当前版本文件为 `1.2.0+20261015`，本次基础构建号保持不变，后续云端构建日期仍按既有规则自动刷新。Flutter 3.24.5 分包会在基础 Android `versionCode`
 上叠加 ABI 偏移：`armeabi-v7a` 为 +1000、`arm64-v8a` 为 +2000、`x86_64` 为 +4000。
