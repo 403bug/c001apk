@@ -14,6 +14,20 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+Future<void> finishAccountAction(WidgetTester tester) async {
+  for (var attempt = 0; attempt < 200; attempt++) {
+    await tester.pump(const Duration(milliseconds: 20));
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 10)));
+    if (find.byType(LinearProgressIndicator).evaluate().isEmpty) {
+      await tester.pumpAndSettle();
+      return;
+    }
+  }
+  fail(
+      'Account action did not finish while advancing real IO and widget frames');
+}
+
 void main() {
   late Directory directory;
   setUpAll(() async {
@@ -131,16 +145,14 @@ void main() {
     await tester.runAsync(() async {
       await tester.tap(find.text('合成账号一'));
       await GStorage.settings.flush();
-      await Future<void>.delayed(const Duration(milliseconds: 30));
     });
-    await tester.pumpAndSettle();
+    await finishAccountAction(tester);
     expect(GStorage.uid, '1');
     await tester.runAsync(() async {
       await tester.tap(find.text('使用游客模式'));
       await GStorage.settings.flush();
-      await Future<void>.delayed(const Duration(milliseconds: 30));
     });
-    await tester.pumpAndSettle();
+    await finishAccountAction(tester);
     expect(GStorage.isLogin, isFalse);
     expect(AccountStore().accounts.length, 2);
     await tester.pumpWidget(const SizedBox.shrink());
