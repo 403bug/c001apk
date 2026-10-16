@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/media/banner.png" alt="c001apk — 让酷安，轻一点。" width="100%">
+<img src="docs/media/banner.svg" alt="c001apk — 让酷安，轻一点。" width="100%">
 
 # c001apk
 
