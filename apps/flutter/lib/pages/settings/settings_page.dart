@@ -24,22 +24,6 @@ import '../../utils/global_data.dart';
 import '../../logic/local_follow/local_follow_store.dart';
 import '../local_follow/local_follow_page.dart';
 
-enum FollowType {
-  ALL,
-  USER,
-  TOPIC,
-  PRODUCT,
-  APP;
-
-  String get label => switch (this) {
-        FollowType.ALL => '全部',
-        FollowType.USER => '用户',
-        FollowType.TOPIC => '话题',
-        FollowType.PRODUCT => '数码',
-        FollowType.APP => '应用',
-      };
-}
-
 enum ImageQuality {
   AUTO,
   ORIGIN,
@@ -246,18 +230,6 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
                   onTap: () => Get.to(() => const LocalFollowListPage()),
                 ),
               ]),
-            ),
-            DropDownMenuItem(
-              icon: Icons.add_circle_outline_outlined,
-              title: '账号关注内容',
-              subtitle: '筛选登录账号的关注动态，不影响本地关注',
-              boxKey: SettingsBoxKey.followType,
-              items: FollowType.values
-                  .map((type) => DropdownMenuItem<int>(
-                        value: FollowType.values.indexOf(type),
-                        child: Text(type.label),
-                      ))
-                  .toList(),
             ),
             const SwitchItem(
               icon: Icons.emoji_emotions_outlined,

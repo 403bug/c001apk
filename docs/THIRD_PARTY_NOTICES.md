@@ -2,6 +2,18 @@
 
 本项目保留原有 [LICENSE](../LICENSE) 与上游署名。
 
+2026-10-16，新增的 `assets/emojis/niuniu_emotion_*.png` 为酷安官方
+Android 16.6.4（2609291）安装包中的 32 张牛牛表情，用于兼容官方表情名称。
+名称以官方 `niuniu_emotion_array` 核对；素材版权归酷安及相应权利人所有，
+不因本项目的 AGPL-3.0 许可证而改变。未引入官方应用代码、账号或用户数据。
+
+本轮会话置顶、取消置顶及删除的接口路径参考
+[c001apk-compose](https://github.com/bggRGjQaUbCoE/c001apk-compose)
+提交 `d44c471fb38fa600d28fa33b5dd7fcfd6abb7197` 的
+`ui/notification/NoticeViewModel.kt`、`logic/network/ApiService.kt`，
+该项目同样采用 AGPL-3.0（见本项目保留的根 LICENSE）。
+Flutter 状态管理、失败重试及会话刷新协调在本项目实现。
+
 `apps/flutter/lib/utils/token_util.dart` 中的 Token V3 兼容实现及
 `apps/flutter/lib/utils/token_v3_data.dart` 中的协议查找表参考自
 [daimiaopeng/coolapk-desktop](https://github.com/daimiaopeng/coolapk-desktop)，

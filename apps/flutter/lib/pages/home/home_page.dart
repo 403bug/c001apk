@@ -111,10 +111,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
         actions: [
           IconButton(
-              onPressed: () => Get.toNamed('/settings'),
-              icon: const Icon(Icons.settings_outlined),
-              tooltip: '设置'),
-          IconButton(
             onPressed: () => Get.toNamed('/search'),
             icon: const Icon(Icons.search),
             tooltip: '搜索',

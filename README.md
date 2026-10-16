@@ -42,27 +42,32 @@
   </tbody>
 </table>
 
-## 界面预览
+## 界面预览（2026-10-16，1.2.5-release）
 
 <p align="center">
-  <img src="docs/media/screenshots/android-home.avif" width="31%" alt="Android 首页：动态列表与底部导航">
+  <img src="docs/media/screenshots/android-home.avif" width="31%" alt="Android 首页：动态列表与主页、关注、我的导航">
   <img src="docs/media/screenshots/android-article.avif" width="31%" alt="Android 图文详情：文章封面与正文">
-  <img src="docs/media/screenshots/android-settings.avif" width="31%" alt="Android 中文设置：字体、历史记录与缓存管理">
+  <img src="docs/media/screenshots/android-settings.avif" width="31%" alt="Android 分类设置：外观、关注、隐私、存储与账号管理">
 </p>
-<p align="center"><sub>Android · 首页 / 图文详情 / 中文设置</sub></p>
+<p align="center"><sub>Android · 首页 / 图文详情 / 分类设置</sub></p>
 
 <p align="center">
   <img src="docs/media/screenshots/windows-home.avif" width="96%" alt="Windows 桌面端首页：侧边导航与宽屏内容区域">
 </p>
 <p align="center"><sub>Windows · 桌面端首页</sub></p>
 
-以上为当前 Flutter 调试版的真实截图，界面随主题设置变化。
+<p align="center">
+  <img src="docs/media/screenshots/windows-settings.avif" width="96%" alt="Windows 分类设置：宽窗口下并排显示分类与外观选项">
+</p>
+<p align="center"><sub>Windows · 分类设置与宽窗口布局</sub></p>
 
-## 下载与进度
+## 下载安装
 
 正式安装包可从 [Releases](https://github.com/TG-Twilight/c001apk/releases) 获取，也可以参照 [开发指南](docs/DEVELOPMENT.md) 自行构建。
 
 云端构建包可从 [Actions](https://github.com/TG-Twilight/c001apk/actions/workflows/build.yml) 的 Artifacts 下载，平台、签名与手动构建方式见 [云端构建指南](docs/CI.md)。
+
+## 开发进度
 
 - [x] 更新公共 API 请求协议、签名与错误处理。
 - [x] 完成现有 Flutter 界面的一轮简体中文汉化。

@@ -9,6 +9,7 @@ import '../pages/carousel/carousel_page.dart';
 import '../pages/chat/chat_page.dart';
 import '../pages/coolpic/coolpic_page.dart';
 import '../pages/dyh/dyh_page.dart';
+import '../pages/event/event_page.dart';
 import '../pages/feed/feed_page.dart';
 import '../pages/ffflist/ffflist_page.dart';
 import '../pages/history/history_page.dart';
@@ -60,6 +61,10 @@ class AppPages {
     _getPage(
       name: '/feed/:id',
       page: () => const FeedPage(),
+    ),
+    _getPage(
+      name: '/event/:id',
+      page: () => const EventPage(),
     ),
     _getPage(
       name: '/u/:uid',

@@ -5,10 +5,6 @@ import '../../components/cards/message_first_card.dart';
 import '../../components/cards/message_header_card.dart';
 import '../../components/cards/message_second_card.dart';
 import '../../components/cards/message_third_card.dart';
-import '../../components/footer.dart';
-import '../../components/item_card.dart';
-import '../../logic/model/feed/datum.dart';
-import '../../logic/state/loading_state.dart';
 import '../../pages/message/message_controller.dart';
 import '../../pages/noitfication/notification_page.dart';
 import '../../utils/extensions.dart';
@@ -32,7 +28,7 @@ class _MessagePageState extends State<MessagePage>
     0xFFf44336,
     0xFFff9800,
   ];
-  final _titleList = ['@我的动态', '@我的评论', '我收到的赞', '好友关注', '私信'];
+  final _titleList = ['@我的动态', '@我的评论', '我收到的赞', '好友关注', '私信与信息'];
   final _iconList = [
     Icons.alternate_email,
     Icons.message_outlined,
@@ -43,11 +39,8 @@ class _MessagePageState extends State<MessagePage>
   late final MessageController _messageController =
       Get.put(MessageController());
 
-  bool _isRefreshing = false;
-
   @override
   void dispose() {
-    _messageController.scrollController?.dispose();
     Get.delete<MessageController>();
     super.dispose();
   }
@@ -63,87 +56,9 @@ class _MessagePageState extends State<MessagePage>
   Future<void> _onRefresh() async {
     if (!mounted || !GlobalData().isLogin) return;
     final generation = GlobalData().sessionGeneration;
-    _messageController.onReset();
     await _messageController.getProfile();
     if (!mounted || generation != GlobalData().sessionGeneration) return;
     await _messageController.checkCount();
-    if (!mounted || generation != GlobalData().sessionGeneration) return;
-    await _messageController.onGetData();
-    _isRefreshing = false;
-  }
-
-  Widget _buildMessage(LoadingState loadingState) {
-    switch (loadingState) {
-      case Empty():
-        return SliverToBoxAdapter(
-          child: Container(
-            height: 80,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.all(10.0),
-            child: const Text('暂无内容'),
-          ),
-        );
-      case Error():
-        return SliverToBoxAdapter(
-          child: GestureDetector(
-            onTap: () {
-              _messageController
-                  .setLoadingState(loadingState = LoadingState.loading());
-              _onRefresh();
-            },
-            child: Container(
-              height: 80,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.all(10.0),
-              child: Text(loadingState.errMsg),
-            ),
-          ),
-        );
-      case Success():
-        List<Datum> dataList = loadingState.response as List<Datum>;
-        return SliverPadding(
-          padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-          sliver: SliverList.separated(
-            itemCount: dataList.length + 1,
-            itemBuilder: (_, index) {
-              if (index == dataList.length) {
-                if (!_isRefreshing &&
-                    !_messageController.isEnd &&
-                    !_messageController.isLoading) {
-                  _messageController.onGetData(false);
-                }
-                return Obx(() =>
-                    footerWidget(_messageController.footerState.value, () {
-                      _messageController.isEnd = false;
-                      _messageController.setFooterState(LoadingState.loading());
-                      _messageController.onGetData(false);
-                    }));
-              } else {
-                return itemCard(
-                  dataList[index],
-                  onBlock: _messageController.onBlock,
-                  onDeleteNoti: (id) {
-                    _messageController.postLikeDeleteFollow(
-                      id,
-                      null,
-                      isNoti: true,
-                    );
-                  },
-                );
-              }
-            },
-            separatorBuilder: (_, index) => const SizedBox(height: 10),
-          ),
-        );
-    }
-    return SliverToBoxAdapter(
-      child: Container(
-        height: 80,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.all(10.0),
-        child: const CircularProgressIndicator(),
-      ),
-    );
   }
 
   @override
@@ -175,7 +90,6 @@ class _MessagePageState extends State<MessagePage>
             child: RefreshIndicator(
               onRefresh: () async {
                 if (GlobalData().isLogin) {
-                  _isRefreshing = true;
                   await _onRefresh();
                 } else {
                   return Future.value();
@@ -215,7 +129,14 @@ class _MessagePageState extends State<MessagePage>
                               () {
                                 if (GlobalData().isLogin) {
                                   Get.toNamed('/notification', arguments: {
-                                    'type': NotificationType.values[index - 2]
+                                    'type': NotificationType.values[index - 2],
+                                    if (index == 6)
+                                      'notificationCount': _messageController
+                                          .notificationCount.value,
+                                    if (index == 6)
+                                      'onNotificationsRead': () =>
+                                          _messageController
+                                              .notificationCount.value = null,
                                   });
                                   int? count = _messageController.thirdList
                                       .getOrNull(index - 2);
@@ -234,9 +155,6 @@ class _MessagePageState extends State<MessagePage>
                           const SizedBox(height: 10),
                     ),
                   ),
-                  if (GlobalData().isLogin)
-                    Obx(() =>
-                        _buildMessage(_messageController.loadingState.value)),
                 ],
               ),
             ),

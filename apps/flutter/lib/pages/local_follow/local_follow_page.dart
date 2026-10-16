@@ -14,6 +14,29 @@ import 'local_follow_controller.dart';
 
 String get localFollowLabel => GlobalData().isLogin ? '悄悄关注' : '本地关注';
 
+enum FollowFeedSelection {
+  users(1, '用户关注'),
+  topics(2, '话题关注'),
+  products(3, '数码关注'),
+  apps(4, '应用关注'),
+  all(0, '全部关注'),
+  local(5, '悄悄关注');
+
+  const FollowFeedSelection(this.value, this.label);
+  final int value;
+  final String label;
+  static const storageKey = 'followFeedSelectionV1';
+
+  static FollowFeedSelection load() {
+    // Preserve explicit legacy categories; the old mixed default becomes users.
+    final legacy = GStorage.followType;
+    final value = GStorage.settings
+        .get(storageKey, defaultValue: legacy >= 1 && legacy <= 4 ? legacy : 1);
+    return values.firstWhere((item) => item.value == value,
+        orElse: () => users);
+  }
+}
+
 /// The main timeline keeps server follows and local follows separate.
 class FollowFeedPage extends StatefulWidget {
   const FollowFeedPage({super.key});
@@ -23,52 +46,83 @@ class FollowFeedPage extends StatefulWidget {
 
 class _FollowFeedPageState extends State<FollowFeedPage>
     with AutomaticKeepAliveClientMixin {
-  bool _local = false;
+  FollowFeedSelection _selection = FollowFeedSelection.load();
+
+  Future<void> _select(FollowFeedSelection selection) async {
+    if (selection != _selection) setState(() => _selection = selection);
+    try {
+      await GStorage.settings
+          .put(FollowFeedSelection.storageKey, selection.value);
+    } catch (_) {
+      SmartDialog.showToast('关注分类保存失败，请重试');
+    }
+  }
+
   @override
   bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('动态'),
-        actions: [
-          IconButton(
-            onPressed: () => Get.toNamed('/settings'),
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: '设置',
-          ),
-          IconButton(
-            onPressed: () => Get.toNamed('/search'),
-            icon: const Icon(Icons.search),
-            tooltip: '搜索',
-          ),
-        ],
-      ),
-      body: ValueListenableBuilder(
-        valueListenable:
-            GStorage.settings.listenable(keys: [SettingsBoxKey.isLogin]),
-        builder: (context, _, __) => Column(children: [
-          if (GlobalData().isLogin)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(value: false, label: Text('账号关注')),
-                  ButtonSegment(value: true, label: Text('悄悄关注')),
-                ],
-                selected: {_local},
-                onSelectionChanged: (value) =>
-                    setState(() => _local = value.first),
-              ),
+    return ValueListenableBuilder(
+      valueListenable:
+          GStorage.settings.listenable(keys: [SettingsBoxKey.isLogin]),
+      builder: (context, _, __) => Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          titleSpacing: 8,
+          title: GlobalData().isLogin
+              ? PopupMenuButton<FollowFeedSelection>(
+                  tooltip: '切换关注内容',
+                  initialValue: _selection,
+                  position: PopupMenuPosition.under,
+                  onSelected: _select,
+                  itemBuilder: (context) => [
+                    const PopupMenuItem<FollowFeedSelection>(
+                      enabled: false,
+                      height: 32,
+                      child: Text('账号关注'),
+                    ),
+                    for (final item in FollowFeedSelection.values) ...[
+                      if (item == FollowFeedSelection.local)
+                        const PopupMenuDivider(),
+                      CheckedPopupMenuItem(
+                        value: item,
+                        checked: item == _selection,
+                        child: Text(item.label),
+                      ),
+                    ],
+                  ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Flexible(
+                          child: Text(_selection.label,
+                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ),
+                        const Icon(Icons.arrow_drop_down),
+                      ]),
+                    ),
+                  ),
+                )
+              : const Text('本地关注'),
+          actions: [
+            IconButton(
+              onPressed: () => Get.toNamed('/search'),
+              icon: const Icon(Icons.search),
+              tooltip: '搜索',
             ),
-          Expanded(
-              child: !GlobalData().isLogin || _local
-                  ? const LocalFollowFeedView()
-                  : const HomeFeedPage(tabType: TabType.FOLLOW)),
-        ]),
+          ],
+        ),
+        body: !GlobalData().isLogin || _selection == FollowFeedSelection.local
+            ? const LocalFollowFeedView()
+            : HomeFeedPage(
+                key: ValueKey(_selection),
+                tabType: TabType.FOLLOW,
+                followType: _selection.value,
+              ),
       ),
     );
   }

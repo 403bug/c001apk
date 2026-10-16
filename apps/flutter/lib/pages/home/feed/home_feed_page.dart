@@ -18,9 +18,11 @@ class HomeFeedPage extends StatefulWidget {
   const HomeFeedPage({
     super.key,
     required this.tabType,
+    this.followType,
   });
 
   final TabType tabType;
+  final int? followType;
 
   @override
   State<HomeFeedPage> createState() => _HomeFeedPageState();
@@ -36,7 +38,10 @@ class _HomeFeedPageState extends State<HomeFeedPage>
   StreamSubscription<int>? _returnTopSubscription;
   late bool _isFabVisible = true;
 
-  late final followType = GStorage.followType;
+  late final followType = widget.followType ?? GStorage.followType;
+  late final _tag = widget.tabType == TabType.FOLLOW
+      ? '${widget.tabType.name}-${UniqueKey()}'
+      : widget.tabType.name;
 
   late final _homeFeedController = Get.put(
     HomeFeedController(
@@ -54,9 +59,8 @@ class _HomeFeedPageState extends State<HomeFeedPage>
         TabType.COOLPIC => '酷图',
         _ => null,
       },
-      followType: widget.tabType == TabType.FOLLOW ? GStorage.followType : null,
     ),
-    tag: widget.tabType.name,
+    tag: _tag,
   );
 
   @override
@@ -66,7 +70,7 @@ class _HomeFeedPageState extends State<HomeFeedPage>
     _homeFeedController.scrollController?.dispose();
     _fabAnimationCtr?.dispose();
     Get.delete<HomeFeedController>(
-      tag: widget.tabType.name,
+      tag: _tag,
     );
     super.dispose();
   }
