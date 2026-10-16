@@ -75,8 +75,7 @@ void main() {
     service = UpdateService(
         preferences: preferences,
         dio: dio,
-        currentVersion: () async => '1.1.5',
-        clock: () => now);
+        currentVersion: () async => '1.1.5');
   });
   tearDownAll(() async {
     await Hive.close();
@@ -133,27 +132,36 @@ void main() {
     expect((await service.check()).status, UpdateStatus.available);
     expect(box.get('checkUpdate'), false);
   });
-  test('automatic checks run once per 24 hours and survive service recreation',
+  test('every startup checks again within 24 hours, once per running service',
       () async {
     expect(
         (await service.check(automatic: true)).status, UpdateStatus.available);
     expect(
         (await service.check(automatic: true)).status, UpdateStatus.suppressed);
-    now = now.add(const Duration(hours: 24));
-    expect(
-        (await service.check(automatic: true)).status, UpdateStatus.available);
+    final restarted = UpdateService(
+        preferences: UpdatePreferences(box),
+        dio: Dio()..httpClientAdapter = adapter,
+        currentVersion: () async => '1.1.5');
+    expect((await restarted.check(automatic: true)).status,
+        UpdateStatus.available);
     expect(adapter.requests, hasLength(2));
   });
-  test('later reminders persist for 24 hours but manual checks bypass them',
+  test('legacy check and snooze timestamps cannot suppress a new startup',
       () async {
-    await preferences.snooze(now);
-    expect(
-        (await service.check(automatic: true)).status, UpdateStatus.suppressed);
-    expect((await service.check()).status, UpdateStatus.available);
-    expect(UpdatePreferences(box).automaticAllowed(now), false);
-    now = now.add(const Duration(hours: 24));
+    await box.put('lastAppUpdateCheck', now.millisecondsSinceEpoch);
+    await box.put('appUpdateSnoozeUntil',
+        now.add(const Duration(hours: 24)).millisecondsSinceEpoch);
     expect(
         (await service.check(automatic: true)).status, UpdateStatus.available);
+    expect(adapter.requests, hasLength(1));
+  });
+  test('manual checks remain available after the startup check', () async {
+    expect(
+        (await service.check(automatic: true)).status, UpdateStatus.available);
+    expect((await service.check()).status, UpdateStatus.available);
+    expect(
+        (await service.check(automatic: true)).status, UpdateStatus.suppressed);
+    expect(adapter.requests, hasLength(2));
   });
   test('skip affects only that version and manual checks bypass it', () async {
     await preferences.skip('1.2.0');
@@ -161,9 +169,12 @@ void main() {
         (await service.check(automatic: true)).status, UpdateStatus.suppressed);
     expect((await service.check()).status, UpdateStatus.available);
     adapter.body = releaseJson(tag: '1.3.0-release');
-    now = now.add(const Duration(hours: 24));
-    expect(
-        (await service.check(automatic: true)).status, UpdateStatus.available);
+    final restarted = UpdateService(
+        preferences: UpdatePreferences(box),
+        dio: Dio()..httpClientAdapter = adapter,
+        currentVersion: () async => '1.1.5');
+    expect((await restarted.check(automatic: true)).status,
+        UpdateStatus.available);
   });
   test('same version and older releases never trigger an update', () async {
     adapter.body = releaseJson(tag: '1.1.5-release');
@@ -171,7 +182,8 @@ void main() {
     adapter.body = releaseJson(tag: '1.1.0-release');
     expect((await service.check()).status, UpdateStatus.upToDate);
   });
-  test('failures report errors and automatic failures are throttled', () async {
+  test('failed startup checks can retry manually or on the next startup',
+      () async {
     adapter.status = 403;
     expect((await service.check(automatic: true)).status, UpdateStatus.failed);
     expect(
@@ -182,6 +194,13 @@ void main() {
     adapter.status = 200;
     adapter.body = '<html>error</html>';
     expect((await service.check()).status, UpdateStatus.failed);
+    adapter.body = releaseJson();
+    final restarted = UpdateService(
+        preferences: UpdatePreferences(box),
+        dio: Dio()..httpClientAdapter = adapter,
+        currentVersion: () async => '1.1.5');
+    expect((await restarted.check(automatic: true)).status,
+        UpdateStatus.available);
   });
   test(
       'concurrent checks share the guard and disabling during fetch suppresses UI',

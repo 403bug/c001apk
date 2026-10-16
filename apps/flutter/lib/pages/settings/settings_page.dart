@@ -280,7 +280,7 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
               builder: (context, _, __) => SwitchListTile(
                 secondary: const Icon(Icons.update),
                 title: const Text('自动检查 c001apk 更新'),
-                subtitle: const Text('启动后检查最新正式版本，每 24 小时最多一次'),
+                subtitle: const Text('每次启动时检查一次最新正式版本'),
                 value: UpdatePreferences(GStorage.settings).enabled,
                 onChanged: (value) =>
                     UpdatePreferences(GStorage.settings).setEnabled(value),

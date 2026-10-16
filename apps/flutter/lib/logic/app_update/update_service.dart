@@ -18,29 +18,29 @@ class UpdateService {
   UpdateService(
       {required this.preferences,
       Dio? dio,
-      Future<String> Function()? currentVersion,
-      DateTime Function()? clock})
+      Future<String> Function()? currentVersion})
       : _dio = dio ??
             Dio(BaseOptions(
                 connectTimeout: const Duration(seconds: 8),
                 receiveTimeout: const Duration(seconds: 8))),
         _currentVersion = currentVersion ??
-            (() async => (await PackageInfo.fromPlatform()).version),
-        clock = clock ?? DateTime.now;
+            (() async => (await PackageInfo.fromPlatform()).version);
   final UpdatePreferences preferences;
   final Dio _dio;
   final Future<String> Function() _currentVersion;
-  final DateTime Function() clock;
   bool _checking = false;
+  bool _automaticChecked = false;
 
   Future<UpdateResult> check({bool automatic = false}) async {
     if (_checking) return const UpdateResult(UpdateStatus.busy);
-    if (automatic && !preferences.automaticAllowed(clock())) {
+    if (automatic && (!preferences.enabled || _automaticChecked)) {
       return const UpdateResult(UpdateStatus.suppressed);
     }
     _checking = true;
+    // The app owns one service per process. Do not persist this guard: a new
+    // startup must discover releases published after the previous check.
+    if (automatic) _automaticChecked = true;
     try {
-      if (automatic) await preferences.recordCheck(clock());
       final current = await _currentVersion();
       final response = await _dio.get<dynamic>(
           'https://api.github.com/repos/TG-Twilight/c001apk/releases/latest',

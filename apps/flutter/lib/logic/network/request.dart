@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 
 import '../../logic/network/interceptor.dart';
 import '../../utils/global_data.dart';
+import '../../utils/storage_util.dart';
 import 'captcha_challenge.dart';
 
 class Request {
@@ -46,7 +47,9 @@ class Request {
         generation,
         options.extra?['skipCaptcha'] == true,
         (proof, challenge) => dio.get(url,
-            queryParameters: {...?queryParameters, challenge.field: proof},
+            queryParameters: challenge.field.isEmpty
+                ? queryParameters
+                : {...?queryParameters, challenge.field: proof},
             options: options,
             cancelToken: cancelToken));
     _checkSession(generation, verified);
@@ -83,15 +86,19 @@ class Request {
         response, session, generation, options.extra?['skipCaptcha'] == true,
         (proof, challenge) {
       Object? verifiedData = retryData;
-      if (retryData is FormData) {
-        retryData.fields.removeWhere((e) => e.key == challenge.field);
-        retryData.fields.add(MapEntry(challenge.field, proof));
-      } else if (retryData is Map<String, dynamic>) {
-        verifiedData = {...retryData, challenge.field: proof};
+      if (challenge.field.isNotEmpty) {
+        if (retryData is FormData) {
+          retryData.fields.removeWhere((e) => e.key == challenge.field);
+          retryData.fields.add(MapEntry(challenge.field, proof));
+        } else if (retryData is Map<String, dynamic>) {
+          verifiedData = {...retryData, challenge.field: proof};
+        }
       }
       return dio.post(url,
           data: verifiedData,
-          queryParameters: verifiedData is FormData || verifiedData is Map
+          queryParameters: challenge.field.isEmpty ||
+                  verifiedData is FormData ||
+                  verifiedData is Map
               ? queryParameters
               : {...?queryParameters, challenge.field: proof},
           options: options,
@@ -130,6 +137,8 @@ class Request {
     }
     final challenge = CaptchaChallenge.fromBody(response.data);
     if (challenge == null) return response;
+    final device = response.requestOptions.headers['X-App-Device'];
+    if (challenge.field.isEmpty) ApiInterceptor.clearCaptchaCookie();
     String? proof;
     _verifying = true;
     try {
@@ -139,6 +148,7 @@ class Request {
     }
     if (proof == null ||
         generation != GlobalData().sessionGeneration ||
+        (device != null && device != GStorage.xAppDevice) ||
         !challenge.acceptsProof(proof) ||
         response.requestOptions.cancelToken?.isCancelled == true ||
         session !=
@@ -149,7 +159,12 @@ class Request {
     }
     // Direct Dio call, deliberately outside this helper: no verification loop,
     // network retries or replay after ambiguous transport errors.
+    if (challenge.field.isEmpty) ApiInterceptor.setCaptchaCookie(proof);
     final verified = await retry(proof, challenge);
+    if (challenge.field.isEmpty &&
+        CaptchaChallenge.fromBody(verified.data) != null) {
+      ApiInterceptor.clearCaptchaCookie();
+    }
     verified.extra['captchaVerification'] = 'submitted';
     return verified;
   }

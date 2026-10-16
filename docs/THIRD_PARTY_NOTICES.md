@@ -38,6 +38,10 @@ Node bcryptjs 实现生成，不含真实设备、账号凭据或用户 Token。
 `NEC` 验证凭证格式，以及点赞/回复的表单参数参考上述同一提交的
 `src/utils/neteaseCaptcha.ts` 与 `src-tauri/src/coolapk/client.rs`，适用上述 MIT 声明。
 Flutter 验证界面独立实现，运行时加载网易易盾官方 Web SDK，不把 SDK 打包到源码中。
+
+2026-10-16，空 `captchaField` 对应 `validate` Cookie 的协议语义经官方
+Android 16.6.4（2609291）客户端与游客只读响应对照核实。本项目独立实现
+该分支及当前账号、设备范围内的内存复用，没有移植或分发官方客户端代码。
 SDK 接入回调另核对 [网易易盾官方示例](https://github.com/yidun/captcha-php-demo/blob/master/index.php)。
 
 2026-10-14，Android 启动器图标的系统 Monet 亮暗配色参考

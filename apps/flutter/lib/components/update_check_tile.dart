@@ -90,7 +90,7 @@ class AppUpdates {
             }
           case UpdateAction.later:
           case null:
-            await updater.preferences.snooze(updater.clock());
+            break;
         }
       } else if (!automatic &&
           (result.status == UpdateStatus.failed ||

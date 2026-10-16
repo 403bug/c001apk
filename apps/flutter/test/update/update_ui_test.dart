@@ -53,8 +53,7 @@ void main() {
       final service = UpdateService(
           preferences: preferences,
           dio: Dio()..httpClientAdapter = adapter,
-          currentVersion: () async => '1.1.5',
-          clock: () => DateTime.utc(2026, 10, 15));
+          currentVersion: () async => '1.1.5');
       await tester.pumpWidget(
           MaterialApp(home: Scaffold(body: UpdateCheckTile(service: service))));
       await tester.runAsync(() async {
@@ -71,8 +70,7 @@ void main() {
       });
       await waitForUpdateUi(tester, find.text('检查更新'));
       await tester.pumpAndSettle();
-      expect(preferences.automaticAllowed(DateTime.utc(2026, 10, 15)),
-          label == '跳过');
+      expect(GStorage.settings.get('appUpdateSnoozeUntil'), isNull);
       expect(preferences.skipped('1.2.0'), label == '跳过');
       expect(preferences.enabled, true);
       await tester.runAsync(() async {
