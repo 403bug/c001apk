@@ -75,11 +75,12 @@
 - [x] 基本修复账号登录与状态管理，补齐验证码交互。
 - [x] 本地关注与悄悄关注、多账号管理及游客模式切换。
 - [x] 主导航与分类设置调整，新增 c001apk 自身更新检测。
+- [x] 修复评论完成验证后仍无法加载，更新检测改为每次冷启动检查一次。
 - [ ] 继续完善验证码放行与部分账号操作。
 - [ ] Android 迁移到 Kotlin / Jetpack Compose，采用 Material 3 Expressive。
 - [ ] 完善 Flutter 桌面端随窗口尺寸变化的自适应布局与图片保存。
 
-当前重点维护 **Android 与 Windows**，代码仍为 Flutter。Android 包名为 `app.awavenue.c001apk`；Linux 已通过云端 release 构建，iOS `arm64` 未签名 IPA 已随 [1.2.5-release](https://github.com/TG-Twilight/c001apk/releases/tag/1.2.5-release) 提供，安装前需自行签名。Linux / iOS 运行体验仍待验收。新包与旧包独立安装，登录及本地数据不会自动迁移。
+当前重点维护 **Android 与 Windows**，代码仍为 Flutter。Android 包名为 `app.awavenue.c001apk`；Linux 已通过云端 release 构建，iOS `arm64` 未签名 IPA 已随 [1.2.6-release](https://github.com/TG-Twilight/c001apk/releases/tag/1.2.6-release) 提供，安装前需自行签名。Linux / iOS 运行体验仍待验收。新包与旧包独立安装，登录及本地数据不会自动迁移。
 
 > [!NOTE]
 > 部分内容仍受登录、验证码和服务端接口限制，验证码放行与部分账号操作仍需继续完善。Windows 暂不支持应用内直接保存图片，可在浏览器中打开后保存。
