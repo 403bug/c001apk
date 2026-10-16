@@ -45,19 +45,19 @@
 ## 界面预览（2026-10-16，1.2.5-release）
 
 <p align="center">
-  <img src="docs/media/screenshots/android-home.avif" width="31%" alt="Android 首页：动态列表与主页、关注、我的导航">
-  <img src="docs/media/screenshots/android-article.avif" width="31%" alt="Android 图文详情：文章封面与正文">
-  <img src="docs/media/screenshots/android-settings.avif" width="31%" alt="Android 分类设置：外观、关注、隐私、存储与账号管理">
+  <img src="docs/media/screenshots/android-home-1.2.5.avif" width="31%" alt="Android 首页：动态列表与主页、关注、我的导航">
+  <img src="docs/media/screenshots/android-article-1.2.5.avif" width="31%" alt="Android 图文详情：文章封面与正文">
+  <img src="docs/media/screenshots/android-settings-1.2.5.avif" width="31%" alt="Android 分类设置：外观、关注、隐私、存储与账号管理">
 </p>
 <p align="center"><sub>Android · 首页 / 图文详情 / 分类设置</sub></p>
 
 <p align="center">
-  <img src="docs/media/screenshots/windows-home.avif" width="96%" alt="Windows 桌面端首页：侧边导航与宽屏内容区域">
+  <img src="docs/media/screenshots/windows-home-1.2.5.avif" width="96%" alt="Windows 桌面端首页：侧边导航与宽屏内容区域">
 </p>
 <p align="center"><sub>Windows · 桌面端首页</sub></p>
 
 <p align="center">
-  <img src="docs/media/screenshots/windows-settings.avif" width="96%" alt="Windows 分类设置：宽窗口下并排显示分类与外观选项">
+  <img src="docs/media/screenshots/windows-settings-1.2.5.avif" width="96%" alt="Windows 分类设置：宽窗口下并排显示分类与外观选项">
 </p>
 <p align="center"><sub>Windows · 分类设置与宽窗口布局</sub></p>
 
