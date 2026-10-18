@@ -67,6 +67,8 @@
 
 云端构建包可从 [Actions](https://github.com/TG-Twilight/c001apk/actions/workflows/build.yml) 的 Artifacts 下载，平台、签名与手动构建方式见 [云端构建指南](docs/CI.md)。
 
+反复遇到人机验证时，可参照 [从官方酷安导入设备标识](docs/DEVICE_ID_IMPORT.md)。自动识别入口需要包含此功能的新版本，不会自动加入旧发行包。
+
 ## 开发进度
 
 - [x] 更新公共 API 请求协议、签名与错误处理。
