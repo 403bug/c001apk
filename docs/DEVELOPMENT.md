@@ -87,7 +87,9 @@ flutter build windows --debug
 flutter build apk --debug
 ```
 
-Windows 产物位于 `apps/flutter/build/windows/x64/runner/Debug/`，Android 调试 APK 位于 `apps/flutter/build/app/outputs/flutter-apk/app-debug.apk`。调试构建用于开发验证；正式发布时应配置自己的签名。
+Windows 产物位于 `apps/flutter/build/windows/x64/runner/Debug/`，Android 调试 APK 位于 `apps/flutter/build/app/outputs/flutter-apk/app-debug.apk`。本项目所有 Android APK（包括 debug 和 instrumentation 测试包）均使用“秋风のとおり道”项目证书；缺少签名配置时构建失败，不回退 Android Debug 证书。
+
+本机从 Windows 用户级 `REVIA_KS_PASS` 读取密码，只注入当前构建进程，用后清除；`key.properties` 仅保存本地 keystore 路径和 alias，不保存密码。CI 的 debug 与 release 均通过既有 Secrets 临时恢复 keystore、核验 APK 证书后清理。PR 跳过 Android APK 构建，不向 PR 代码提供签名 Secrets；其他检查及平台构建保留。
 
 ### Release 构建与 Android 签名
 
@@ -119,8 +121,7 @@ Linux 还不支持 x64 到 ARM64 交叉构建，因此当前桌面 CI 使用 x86
 架构支持和 APK 拆分方式参见 [Flutter 平台支持](https://docs.flutter.dev/reference/supported-platforms)
 及 [Android 发布指南](https://docs.flutter.dev/deployment/android#build-an-apk)。
 
-Android release 必须配置正式签名，缺少 keystore、alias 或密码时构建失败。
-debug 继续使用开发证书。以下环境变量在构建时读取：
+Android 所有构建变体（包括 debug、profile、release 和 instrumentation 测试包）均使用项目证书，缺少 keystore、alias 或密码时构建失败。以下环境变量在构建时读取：
 
 | 环境变量 | 用途 |
 | --- | --- |
@@ -138,11 +139,12 @@ Windows 用户级变量需要注入当前进程，例如：
 
 ```powershell
 $env:REVIA_KS_PASS = [Environment]::GetEnvironmentVariable('REVIA_KS_PASS', 'User')
-flutter build apk --release --split-per-abi
+try { flutter build apk --release --split-per-abi }
+finally { Remove-Item Env:REVIA_KS_PASS }
 ```
 
 GitHub Actions 配置见 [云端构建指南](CI.md) 与 [Build workflow](../.github/workflows/build.yml)。
-普通 push/PR 执行离线检查、Windows/Linux x86_64 release 和 Android debug 构建；
+普通 push 执行离线检查、Windows/Linux x86_64 release 和项目签名 Android debug 构建；PR 跳过 Android 构建；
 手动运行可生成正式签名的 Android 三 ABI APK，并选择构建 iOS arm64 未签名 IPA（安装前需自行签名）。
 Android 签名使用 Actions Secrets `ANDROID_KEYSTORE_BASE64` 和 `REVIA_KS_PASS`：
 runner 临时恢复 JKS，并以 `KEYSTORE`、`KEY_ALIAS` 和密码环境变量传给构建。
