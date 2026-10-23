@@ -74,6 +74,8 @@ Android debug 和 release 任务先检查 Secrets，再将 JKS 恢复到 runner 
 不放在命令参数或 `key.properties` 中。构建后逐个 APK 使用 `apksigner verify` 核对指纹，
 正式 release 包另检查仅含指定 ABI 的 AOT 库。校验失败不会上传安装包。
 
+APK 证书解析兼容旧版 `Signer #1` 与 Build Tools 37 的 `V2 Signer:` 等前缀，仅提取证书的 64 位 SHA-256 字段；统一大小写并去重后仍须与指定指纹完全相等，空结果或出现其他证书均失败。
+
 清理步骤使用 `always()`，在成功或失败后移除临时 JKS 和证书。
 不缓存项目/Gradle 目录，不上传整个 workspace，仅上传指定的分发文件；
 JKS、密码和 Base64 不进入 Git 或 artifacts。PR 不读取签名 Secrets；受信任的 main push 与手动 Android 构建通过 Secrets 签名。

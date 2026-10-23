@@ -190,7 +190,7 @@ jobs:
         run: |
           for abi in arm64-v8a armeabi-v7a x86_64; do
             report=$("$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs "build/app/outputs/flutter-apk/app-$abi-debug.apk")
-            actual=$(printf '%s\n' "$report" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | tr '[:lower:]' '[:upper:]')
+            actual=$(printf '%s\n' "$report" | tr -d '\r' | sed -nE 's/^.*certificate SHA-256 digest: ([[:xdigit:]]{64})$/\1/p' | tr '[:lower:]' '[:upper:]' | sort -u)
             test "$actual" = "$EXPECTED_CERT_SHA256" || { echo "Unexpected debug APK certificate: $abi"; exit 1; }
           done
       - name: Remove temporary signing material
@@ -268,7 +268,7 @@ jobs:
           for abi in arm64-v8a armeabi-v7a x86_64; do
             apk="build/app/outputs/flutter-apk/app-$abi-release.apk"
             report=$("$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs "$apk")
-            actual=$(printf '%s\n' "$report" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | tr '[:lower:]' '[:upper:]')
+            actual=$(printf '%s\n' "$report" | tr -d '\r' | sed -nE 's/^.*certificate SHA-256 digest: ([[:xdigit:]]{64})$/\1/p' | tr '[:lower:]' '[:upper:]' | sort -u)
             test "$actual" = "$EXPECTED_CERT_SHA256" || { echo "Unexpected APK certificate: $abi"; exit 1; }
             python3 - "$apk" "$abi" <<'PY'
           import sys, zipfile
