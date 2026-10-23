@@ -163,7 +163,7 @@ jobs:
       - name: Select JDK and install Android SDK packages
         run: |
           flutter config --jdk-dir="$JAVA_HOME"
-          sdkmanager 'platforms;android-37' 'build-tools;37.0.0' 'ndk;28.2.13676358'
+          sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;28.2.13676358'
       - name: Sync build date
         run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
       - run: flutter pub get --enforce-lockfile
@@ -235,7 +235,7 @@ jobs:
       - name: Select JDK and install Android SDK packages
         run: |
           flutter config --jdk-dir="$JAVA_HOME"
-          sdkmanager 'platforms;android-37' 'build-tools;37.0.0' 'ndk;28.2.13676358'
+          sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;28.2.13676358'
       - name: Sync build date
         run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
       - run: flutter pub get --enforce-lockfile
