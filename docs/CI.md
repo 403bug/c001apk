@@ -2,9 +2,11 @@
 
 [返回开发指南](DEVELOPMENT.md) · [查看 Actions](https://github.com/TG-Twilight/c001apk/actions/workflows/build.yml)
 
-配置入口为 [Build workflow](../.github/workflows/build.yml)。固定 Flutter 3.24.5 / Dart 3.5.4，
+配置入口为 [Build workflow](../.github/workflows/build.yml)。当前本地配置固定 Flutter 3.47.7 / Dart 3.13.5，
 Android 使用 Temurin JDK 17，所有 Flutter 命令从 `apps/flutter/` 执行。
 依赖安装使用 `--enforce-lockfile`，不在云端自动升级依赖；Action 引用固定到完整提交 SHA。
+
+2026-10-22 的工具链迁移只更新本地 workflow，尚未上传或运行新矩阵；下述旧版云端成功记录不作为新工具链的 CI 通过证据。Android 安装 API 37、Build Tools 37.0.0、NDK 28.2.13676358，Gradle / AGP / Kotlin 版本及兼容开关见 [开发指南](DEVELOPMENT.md)。
 
 2026-10-16 已实际跑通 [自动构建](https://github.com/TG-Twilight/c001apk/actions/runs/38920141215)
 和 [正式构建](https://github.com/TG-Twilight/c001apk/actions/runs/38920146119)：离线检查、
@@ -44,13 +46,13 @@ Linux / iOS 运行体验仍待验收。云端 Ubuntu 离线检查 150 项通过�
 正式版也已由维护者发布至 [1.2.6-release](https://github.com/TG-Twilight/c001apk/releases/tag/1.2.6-release)，
 包含同次成功构建的六份分发包与统一校验清单，下载不受 Actions artifacts 保留天数影响。
 
-当前已发布版本为 `1.2.6+20261016`，本次基础构建号保持不变，后续云端构建日期仍按既有规则自动刷新。Flutter 3.24.5 分包会在基础 Android `versionCode`
+以下保留 `1.2.6+20261016` 的历史分包示例，后续云端构建日期仍按既有规则自动刷新。Flutter 分包会在基础 Android `versionCode`
 上叠加 ABI 偏移：`armeabi-v7a` 为 +1000、`arm64-v8a` 为 +2000、`x86_64` 为 +4000。
 因此以 `20261016` 为基础时，APK 的实际编码分别为 `20262016`、`20263016`、`20265016`，
 `versionName` 均为 `1.2.6`；文件名仍使用 pubspec 版本。后续版本编码维护应沿用这一分包规则。
 
-桌面 ARM64 不列入当前目标：Flutter 3.24.5 官方 Windows/Linux SDK 发布包只有 x64，
-旧工具链的原生插件也未完成 ARM64 验证。移动端 arm64 不受这一决定影响。
+桌面 ARM64 不列入当前目标，升级工具链不自动扩大原有 Windows/Linux x86_64 发布矩阵；
+原生插件与 ARM64 运行尚未验证。移动端 arm64 不受这一决定影响。
 
 ## Android 正式签名
 

@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../components/mouse_drag_scroll.dart';
 import '../../pages/home/app/app_list_page.dart';
 import '../../pages/home/feed/home_feed_page.dart';
 import '../../pages/home/return_top_controller.dart';
@@ -99,15 +100,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: TabBar(
-          controller: _tabController,
-          tabs: _tabTypes.map((type) => Tab(text: type.label)).toList(),
-          isScrollable: true,
-          onTap: (index) {
-            if (!_tabController.indexIsChanging) {
-              scrollToTop(index);
-            }
-          },
+        title: MouseDragScroll(
+          child: TabBar(
+            controller: _tabController,
+            tabs: _tabTypes.map((type) => Tab(text: type.label)).toList(),
+            isScrollable: true,
+            onTap: (index) {
+              if (!_tabController.indexIsChanging) {
+                scrollToTop(index);
+              }
+            },
+          ),
         ),
         actions: [
           IconButton(

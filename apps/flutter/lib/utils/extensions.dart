@@ -137,6 +137,8 @@ extension NullableStringExt on String? {
     if (isNullOrBlank) {
       return '内容为空，取消操作'.toast();
     }
+    // Kept with the disabled external launch flow below.
+    // ignore: unused_element
     Future doOtherAction() async {
       if (await canLaunchUrlString(this!)) {
         await launchUrlString(this!, mode: LaunchMode.externalApplication);

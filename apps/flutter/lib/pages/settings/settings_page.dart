@@ -9,6 +9,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../components/dialog.dart';
+import '../../components/expressive_list_section.dart';
+import '../../components/keyboard_scroll_region.dart';
 import '../../components/update_check_tile.dart';
 import '../../logic/app_update/update_preferences.dart';
 import '../../logic/accounts/account_store.dart';
@@ -56,66 +58,85 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   SettingsSection _section = SettingsSection.appearance;
-  Widget _categories(bool wide) => ListView(children: [
-        for (final section in SettingsSection.values)
-          ListTile(
-            leading: Icon(section.icon),
-            title: Text(section.title),
-            subtitle: Text(section.description),
-            selected: wide && section == _section,
-            trailing: wide ? null : const Icon(Icons.chevron_right),
-            onTap: () {
-              if (wide) {
-                setState(() => _section = section);
-              } else {
-                Get.to(() => SettingsDetailPage(section: section));
-              }
-            },
-          ),
-        const Divider(),
-        ValueListenableBuilder(
-          valueListenable:
-              GStorage.settings.listenable(keys: [AccountStore.storageKey]),
-          builder: (context, _, __) => ListTile(
-            leading: const Icon(Icons.switch_account_outlined),
-            title: const Text('账号管理'),
-            subtitle:
-                Text('已保存 ${AccountStore().accounts.length} 个账号 · 切换、添加或移除'),
-            onTap: () => Get.toNamed('/accounts'),
-          ),
-        ),
-        ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('关于'),
-            onTap: () async {
-              final info = await PackageInfo.fromPlatform();
-              if (mounted) {
-                Get.toNamed('/about', parameters: {
-                  'version': '${info.version}(${info.buildNumber})'
-                });
-              }
-            }),
-      ]);
+  Widget _categories(bool wide) => KeyboardScrollRegion(
+          child: ListView(
+              key: const PageStorageKey('settings-categories'),
+              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              children: [
+            ExpressiveListSection(children: [
+              for (final section in SettingsSection.values)
+                ListTile(
+                  leading: Icon(section.icon),
+                  title: Text(section.title),
+                  subtitle: Text(section.description),
+                  selected: wide && section == _section,
+                  trailing: wide ? null : const Icon(Icons.chevron_right),
+                  onTap: () {
+                    if (wide) {
+                      setState(() => _section = section);
+                    } else {
+                      Get.to(() => SettingsDetailPage(section: section));
+                    }
+                  },
+                ),
+            ]),
+            ExpressiveListSection(children: [
+              ValueListenableBuilder(
+                valueListenable: GStorage.settings
+                    .listenable(keys: [AccountStore.storageKey]),
+                builder: (context, _, __) => ListTile(
+                  leading: const Icon(Icons.switch_account_outlined),
+                  title: const Text('账号管理'),
+                  subtitle: Text(
+                      '已保存 ${AccountStore().accounts.length} 个账号 · 切换、添加或移除'),
+                  onTap: () => Get.toNamed('/accounts'),
+                ),
+              ),
+              ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('关于'),
+                  onTap: () async {
+                    final info = await PackageInfo.fromPlatform();
+                    if (mounted) {
+                      Get.toNamed('/about', parameters: {
+                        'version': '${info.version}(${info.buildNumber})'
+                      });
+                    }
+                  }),
+            ]),
+          ]));
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('设置')),
         body: SafeArea(
             top: false,
             child: LayoutBuilder(builder: (context, constraints) {
-              final wide = constraints.maxWidth >= 840;
+              final scale = (MediaQuery.textScalerOf(context).scale(16) / 16)
+                  .clamp(1.0, 1.5);
+              final wide = constraints.maxWidth >= 840 * scale;
               return wide
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                          SizedBox(width: 320, child: _categories(true)),
-                          const VerticalDivider(width: 1),
-                          Expanded(
-                              child: SettingsDetailPage(
-                                  key: ValueKey(_section),
-                                  section: _section,
-                                  embedded: true)),
-                        ])
-                  : _categories(false);
+                  ? Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1200),
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                    width: 300 * scale,
+                                    child: _categories(true)),
+                                const VerticalDivider(width: 1),
+                                Expanded(
+                                    child: SettingsDetailPage(
+                                        key: ValueKey(_section),
+                                        section: _section,
+                                        embedded: true)),
+                              ])))
+                  : Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 760),
+                          child: _categories(false)));
             })),
       );
 }
@@ -141,74 +162,90 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
 
   List<Widget> _items(BuildContext context) => switch (widget.section) {
         SettingsSection.appearance => [
-            const SwitchItem(
-              icon: Icons.palette_outlined,
-              title: '动态取色',
-              subtitle: '根据系统配色调整应用主题',
-              boxKey: SettingsBoxKey.useMaterial,
-              defaultValue: true,
-            ),
-            ValueListenableBuilder(
-              valueListenable: GStorage.settings
-                  .listenable(keys: [SettingsBoxKey.useMaterial]),
-              builder: (context, settings, _) => DropDownMenuItem(
-                icon: Icons.format_color_fill,
-                title: '主题颜色',
-                subtitle: '关闭动态取色后可选择固定配色',
-                boxKey: SettingsBoxKey.staticColor,
-                enabled: !GStorage.useMaterial,
-                items: Constants.themeType
-                    .map((type) => DropdownMenuItem<int>(
-                          value: Constants.themeType.indexOf(type),
-                          child: Text(type),
-                        ))
-                    .toList(),
+            const ExpressiveListSection(children: [
+              DropDownMenuItem(
+                icon: Icons.vertical_split_outlined,
+                title: '分栏阅读',
+                subtitle: '左侧查看动态，右侧继续浏览。自动适配大屏；手机开启后横屏生效，窄屏仍用单页',
+                boxKey: SettingsBoxKey.readingMode,
+                items: [
+                  DropdownMenuItem(value: 0, child: Text('自动')),
+                  DropdownMenuItem(value: 1, child: Text('开启')),
+                  DropdownMenuItem(value: 2, child: Text('关闭')),
+                ],
               ),
-            ),
-            const DropDownMenuItem(
-              icon: Icons.dark_mode_outlined,
-              title: '深色模式',
-              subtitle: '选择浅色、深色或跟随系统',
-              boxKey: SettingsBoxKey.selectedTheme,
-              items: [
-                DropdownMenuItem<int>(
-                  value: 1,
-                  child: Text('始终关闭'),
-                ),
-                DropdownMenuItem<int>(
-                  value: 2,
-                  child: Text('始终开启'),
-                ),
-                DropdownMenuItem<int>(
-                  value: 0,
-                  child: Text('跟随系统'),
-                ),
-              ],
-              forceAppUpdate: true,
-            ),
-            ListTile(
-              title: const Text('字体大小'),
-              subtitle:
-                  Text('调整界面文字大小 · ${GStorage.fontScale.toStringAsFixed(2)}x'),
-              leading: const Icon(Icons.text_fields),
-              onTap: () => showDialog<void>(
-                context: context,
-                builder: (context) => SliderDialog(
-                  fontScale: GStorage.fontScale,
-                  setData: (newValue) {
-                    GStorage.setFontScale(newValue);
-                    if (mounted) setState(() {});
-                  },
+            ]),
+            ExpressiveListSection(children: [
+              const SwitchItem(
+                icon: Icons.palette_outlined,
+                title: '动态取色',
+                subtitle: '根据系统配色调整应用主题',
+                boxKey: SettingsBoxKey.useMaterial,
+                defaultValue: true,
+              ),
+              ValueListenableBuilder(
+                valueListenable: GStorage.settings
+                    .listenable(keys: [SettingsBoxKey.useMaterial]),
+                builder: (context, settings, _) => DropDownMenuItem(
+                  icon: Icons.format_color_fill,
+                  title: '主题颜色',
+                  subtitle: '关闭动态取色后可选择固定配色',
+                  boxKey: SettingsBoxKey.staticColor,
+                  enabled: !GStorage.useMaterial,
+                  items: Constants.themeType
+                      .map((type) => DropdownMenuItem<int>(
+                            value: Constants.themeType.indexOf(type),
+                            child: Text(type),
+                          ))
+                      .toList(),
                 ),
               ),
-            ),
+              const DropDownMenuItem(
+                icon: Icons.dark_mode_outlined,
+                title: '深色模式',
+                subtitle: '选择浅色、深色或跟随系统',
+                boxKey: SettingsBoxKey.selectedTheme,
+                items: [
+                  DropdownMenuItem<int>(
+                    value: 1,
+                    child: Text('始终关闭'),
+                  ),
+                  DropdownMenuItem<int>(
+                    value: 2,
+                    child: Text('始终开启'),
+                  ),
+                  DropdownMenuItem<int>(
+                    value: 0,
+                    child: Text('跟随系统'),
+                  ),
+                ],
+                forceAppUpdate: true,
+              ),
+            ]),
+            ExpressiveListSection(children: [
+              ListTile(
+                title: const Text('字体大小'),
+                subtitle: Text(
+                    '调整界面文字大小 · ${GStorage.fontScale.toStringAsFixed(2)}x'),
+                leading: const Icon(Icons.text_fields),
+                onTap: () => showDialog<void>(
+                  context: context,
+                  builder: (context) => SliderDialog(
+                    fontScale: GStorage.fontScale,
+                    setData: (newValue) {
+                      GStorage.setFontScale(newValue);
+                      if (mounted) setState(() {});
+                    },
+                  ),
+                ),
+              ),
+            ]),
           ],
         SettingsSection.content => [
-            const ItemTitle(title: '关注'),
             ValueListenableBuilder(
               valueListenable:
                   GStorage.settings.listenable(keys: [SettingsBoxKey.isLogin]),
-              builder: (context, _, __) => Column(children: [
+              builder: (context, _, __) => ExpressiveListSection(children: [
                 if (GlobalData().isLogin)
                   const SwitchItem(
                     icon: Icons.visibility_off_outlined,
@@ -231,123 +268,138 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
                 ),
               ]),
             ),
-            const SwitchItem(
-              icon: Icons.emoji_emotions_outlined,
-              title: '显示表情',
-              subtitle: '将内容中的酷安表情标记显示为图片',
-              boxKey: SettingsBoxKey.showEmoji,
-              defaultValue: true,
-            ),
+            const ExpressiveListSection(children: [
+              SwitchItem(
+                icon: Icons.emoji_emotions_outlined,
+                title: '显示表情',
+                subtitle: '将内容中的酷安表情标记显示为图片',
+                boxKey: SettingsBoxKey.showEmoji,
+                defaultValue: true,
+              )
+            ]),
           ],
         SettingsSection.privacy => [
-            ListTile(
-              title: const Text('用户黑名单'),
-              subtitle: const Text('管理屏蔽的用户，隐藏其动态'),
-              leading: const Icon(Icons.block),
-              onTap: () => Get.toNamed(
-                '/blacklist/',
-                arguments: {'type': BlackListType.user},
+            ExpressiveListSection(children: [
+              ListTile(
+                title: const Text('用户黑名单'),
+                subtitle: const Text('管理屏蔽的用户，隐藏其动态'),
+                leading: const Icon(Icons.block),
+                onTap: () => Get.toNamed(
+                  '/blacklist/',
+                  arguments: {'type': BlackListType.user},
+                ),
               ),
-            ),
-            ListTile(
-              title: const Text('话题黑名单'),
-              subtitle: const Text('按关键词过滤相关话题内容'),
-              leading: const Icon(Icons.block),
-              onTap: () => Get.toNamed(
-                '/blacklist/',
-                arguments: {'type': BlackListType.topic},
+              ListTile(
+                title: const Text('话题黑名单'),
+                subtitle: const Text('按关键词过滤相关话题内容'),
+                leading: const Icon(Icons.block),
+                onTap: () => Get.toNamed(
+                  '/blacklist/',
+                  arguments: {'type': BlackListType.topic},
+                ),
               ),
-            ),
-            const SwitchItem(
-              icon: Icons.history,
-              title: '记录浏览历史',
-              subtitle: '将浏览过的动态保存在本机，便于再次查看',
-              boxKey: SettingsBoxKey.recordHistory,
-              defaultValue: true,
-            ),
-            const SwitchItem(
-              icon: Icons.travel_explore,
-              title: '在浏览器中打开',
-              subtitle: '使用系统浏览器打开外部网页链接',
-              boxKey: SettingsBoxKey.openInBrowser,
-              defaultValue: false,
-            ),
-          ],
-        SettingsSection.storage => [
-            ValueListenableBuilder(
-              valueListenable: GStorage.settings
-                  .listenable(keys: [UpdatePreferences.enabledKey]),
-              builder: (context, _, __) => SwitchListTile(
-                secondary: const Icon(Icons.update),
-                title: const Text('自动检查 c001apk 更新'),
-                subtitle: const Text('每次启动时检查一次最新正式版本'),
-                value: UpdatePreferences(GStorage.settings).enabled,
-                onChanged: (value) =>
-                    UpdatePreferences(GStorage.settings).setEnabled(value),
-              ),
-            ),
-            const UpdateCheckTile(),
-            if (Platform.isAndroid)
-              const SwitchItem(
-                icon: Icons.system_update,
-                title: '检查已安装应用更新',
-                subtitle: '在应用列表中显示已安装应用的更新入口',
-                boxKey: SettingsBoxKey.checkUpdate,
+            ]),
+            const ExpressiveListSection(children: [
+              SwitchItem(
+                icon: Icons.history,
+                title: '记录浏览历史',
+                subtitle: '将浏览过的动态保存在本机，便于再次查看',
+                boxKey: SettingsBoxKey.recordHistory,
                 defaultValue: true,
               ),
-            Obx(
-              () => ListTile(
-                title: const Text('清理缓存'),
-                subtitle: _settingsController.cacheSize.value.isNotEmpty
-                    ? Text(_settingsController.cacheSize.value)
-                    : null,
-                leading: const Icon(Icons.cleaning_services_outlined),
-                onTap: () async {
-                  await _settingsController.getCacheSize();
-                  if (context.mounted) {
-                    showDialog<void>(
-                      context: context,
-                      builder: (context) => ClearDialog(
-                        cacheSize: _settingsController.cacheSize.value,
-                        onClearCache: () async {
-                          if (await CacheManage().clearCacheAll()) {
-                            _settingsController.getCacheSize();
-                          }
-                        },
-                      ),
-                    );
-                  }
-                },
+              SwitchItem(
+                icon: Icons.travel_explore,
+                title: '在浏览器中打开',
+                subtitle: '使用系统浏览器打开外部网页链接',
+                boxKey: SettingsBoxKey.openInBrowser,
+                defaultValue: false,
               ),
-            ),
+            ]),
+          ],
+        SettingsSection.storage => [
+            ExpressiveListSection(children: [
+              ValueListenableBuilder(
+                valueListenable: GStorage.settings
+                    .listenable(keys: [UpdatePreferences.enabledKey]),
+                builder: (context, _, __) => SwitchListTile(
+                  secondary: const Icon(Icons.update),
+                  title: const Text('自动检查 c001apk 更新'),
+                  subtitle: const Text('每次启动时检查一次最新正式版本'),
+                  value: UpdatePreferences(GStorage.settings).enabled,
+                  onChanged: (value) =>
+                      UpdatePreferences(GStorage.settings).setEnabled(value),
+                ),
+              ),
+              const UpdateCheckTile(),
+              if (Platform.isAndroid)
+                const SwitchItem(
+                  icon: Icons.system_update,
+                  title: '检查已安装应用更新',
+                  subtitle: '在应用列表中显示已安装应用的更新入口',
+                  boxKey: SettingsBoxKey.checkUpdate,
+                  defaultValue: true,
+                ),
+            ]),
+            ExpressiveListSection(children: [
+              Obx(
+                () => ListTile(
+                  title: const Text('清理缓存'),
+                  subtitle: _settingsController.cacheSize.value.isNotEmpty
+                      ? Text(_settingsController.cacheSize.value)
+                      : null,
+                  leading: const Icon(Icons.cleaning_services_outlined),
+                  onTap: () async {
+                    await _settingsController.getCacheSize();
+                    if (context.mounted) {
+                      showDialog<void>(
+                        context: context,
+                        builder: (context) => ClearDialog(
+                          cacheSize: _settingsController.cacheSize.value,
+                          onClearCache: () async {
+                            if (await CacheManage().clearCacheAll()) {
+                              _settingsController.getCacheSize();
+                            }
+                          },
+                        ),
+                      );
+                    }
+                  },
+                ),
+              )
+            ]),
           ],
         SettingsSection.protocol => [
-            ListTile(
-              leading: const Icon(Icons.smartphone),
-              title: const Text('导入官方设备标识'),
-              subtitle: const Text('减少重复人机验证 · 获取说明与粘贴识别'),
-              onTap: () => Get.to(() => const DeviceIdentityPage()),
-            ),
-            ListTile(
-              leading: const Icon(Icons.developer_mode),
-              title: const Text('协议参数'),
-              subtitle: const Text('配置客户端版本、设备与请求参数'),
-              onTap: () => Get.toNamed('/params'),
-            ),
+            ExpressiveListSection(children: [
+              ListTile(
+                leading: const Icon(Icons.smartphone),
+                title: const Text('导入官方设备标识'),
+                subtitle: const Text('减少重复人机验证 · 获取说明与粘贴识别'),
+                onTap: () => Get.to(() => const DeviceIdentityPage()),
+              ),
+              ListTile(
+                leading: const Icon(Icons.developer_mode),
+                title: const Text('协议参数'),
+                subtitle: const Text('配置客户端版本、设备与请求参数'),
+                onTap: () => Get.toNamed('/params'),
+              ),
+            ]),
           ],
       };
   @override
   Widget build(BuildContext context) {
-    final body = Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: ListView(
-                padding: const EdgeInsets.only(bottom: 24),
-                children: [
-                  if (widget.embedded) ItemTitle(title: widget.section.title),
-                  ..._items(context)
-                ])));
+    final body = KeyboardScrollRegion(
+        child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: ListView(
+                    key: PageStorageKey(widget.section),
+                    padding: const EdgeInsets.only(top: 12, bottom: 8),
+                    children: [
+                      if (widget.embedded)
+                        ItemTitle(title: widget.section.title),
+                      ..._items(context)
+                    ]))));
     return widget.embedded
         ? body
         : Scaffold(

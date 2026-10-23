@@ -64,22 +64,25 @@ Widget feedArticleBody(
         ),
       );
     case 'shareUrl':
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: InkWell(
-          onTap: () => Utils.onOpenLink(data.url.orEmpty),
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-          child: Ink(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
-              color: Theme.of(Get.context!).colorScheme.onInverseSurface,
-            ),
-            padding: const EdgeInsets.all(10),
-            child: Text(data.title.orEmpty),
-          ),
-        ),
-      );
+      return Builder(
+          builder: (context) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: InkWell(
+                  onTap: () =>
+                      Utils.onOpenLink(data.url.orEmpty, null, true, context),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  child: Ink(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      color:
+                          Theme.of(Get.context!).colorScheme.onInverseSurface,
+                    ),
+                    padding: const EdgeInsets.all(10),
+                    child: Text(data.title.orEmpty),
+                  ),
+                ),
+              ));
   }
   return const SizedBox();
 }

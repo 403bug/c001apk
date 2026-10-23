@@ -528,6 +528,7 @@ class SettingsBoxKey {
       selectedTheme = 'selectedTheme',
       szlmId = 'szlmId',
       fontScale = 'fontScale',
+      readingMode = 'readingMode',
       followType = 'followType',
       imageQuality = 'imageQuality',
       imageDim = 'imageDim',

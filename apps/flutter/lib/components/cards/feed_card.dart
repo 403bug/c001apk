@@ -8,6 +8,7 @@ import '../../components/icon_text.dart';
 import '../../components/imageview.dart';
 import '../../components/like_button.dart';
 import '../../components/no_splash_factory.dart';
+import '../feed_navigation.dart';
 import '../../logic/model/feed/datum.dart';
 import '../../utils/date_util.dart';
 import '../../utils/extensions.dart';
@@ -33,22 +34,32 @@ class FeedCard extends StatelessWidget {
   final Function(dynamic uid)? onBlock;
   final Function(dynamic id, dynamic like)? onLike;
 
-  void _onViewFeed() {
-    Get.toNamed('/feed/${data.id}');
+  void _onViewFeed(BuildContext context) {
+    FeedNavigation.open(context, '${data.id}');
   }
 
   @override
   Widget build(BuildContext context) {
     return Material(
+      shape:
+          !isFeedContent && FeedNavigation.selectedOf(context) == '${data.id}'
+              ? RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                      color: Theme.of(context).colorScheme.primary, width: 2),
+                )
+              : null,
       color:
           isFeedContent ? null : Theme.of(context).colorScheme.onInverseSurface,
       borderRadius:
-          isFeedContent ? null : const BorderRadius.all(Radius.circular(12)),
+          isFeedContent || FeedNavigation.selectedOf(context) == '${data.id}'
+              ? null
+              : const BorderRadius.all(Radius.circular(12)),
       child: InkWell(
         highlightColor: isFeedContent ? Colors.transparent : null,
         splashColor: isFeedContent ? Colors.transparent : null,
         splashFactory: isFeedContent ? NoSplashFactory() : null,
-        onTap: isFeedContent ? null : _onViewFeed,
+        onTap: isFeedContent ? null : () => _onViewFeed(context),
         onLongPress: () =>
             Get.toNamed('/copy', parameters: {'text': data.message.orEmpty}),
         borderRadius: isFeedContent ? null : BorderRadius.circular(12),
@@ -75,7 +86,8 @@ class FeedCard extends StatelessWidget {
                 _forwardSourceFeed(context),
               if (!data.extraUrl.isNullOrEmpty) _extraUrl(context),
               if (!data.replyRows.isNullOrEmpty) _hotReply(context),
-              bottomInfo(context, data, isFeedContent, _onViewFeed, () {
+              bottomInfo(
+                  context, data, isFeedContent, () => _onViewFeed(context), () {
                 if (onLike != null) {
                   onLike!(data.id, data.userAction?.like);
                 }
@@ -123,7 +135,8 @@ class FeedCard extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: InkWell(
           onTap: data.forwardSourceFeed != null
-              ? () => Get.toNamed('/feed/${data.forwardSourceFeed?.id}')
+              ? () =>
+                  FeedNavigation.open(context, '${data.forwardSourceFeed?.id}')
               : null,
           onLongPress: data.forwardSourceFeed != null
               ? () => Get.toNamed('/copy',
@@ -184,7 +197,8 @@ class FeedCard extends StatelessWidget {
             : Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: InkWell(
-          onTap: () => Utils.onOpenLink(data.extraUrl!, data.extraTitle ?? ''),
+          onTap: () => Utils.onOpenLink(
+              data.extraUrl!, data.extraTitle ?? '', true, context),
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(10),
@@ -254,7 +268,7 @@ class FeedCard extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: InkWell(
-          onTap: _onViewFeed,
+          onTap: () => _onViewFeed(context),
           onLongPress: () =>
               Get.toNamed('/copy', parameters: {'text': reply.message.orEmpty}),
           borderRadius: BorderRadius.circular(12),
