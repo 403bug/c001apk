@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../components/html_text.dart';
+import 'markdown_body.dart';
 import '../components/imageview.dart';
 import '../logic/model/feed_article/feed_article.dart';
 import '../utils/extensions.dart';
@@ -11,8 +12,9 @@ import '../utils/utils.dart';
 Widget feedArticleBody(
   double maxWidth,
   FeedArticle data,
-  List<String> picArr,
-) {
+  List<String> picArr, {
+  bool forcePlain = false,
+}) {
   switch (data.type) {
     case 'title':
       return Padding(
@@ -31,9 +33,11 @@ Widget feedArticleBody(
             Get.toNamed('/copy', parameters: {'text': data.message.orEmpty});
             HapticFeedback.mediumImpact();
           },
-          child: htmlText(
+          child: FeedText(
             data.message.orEmpty,
             fontSize: 16,
+            forcePlain: forcePlain,
+            picArr: picArr,
           ),
         ),
       );

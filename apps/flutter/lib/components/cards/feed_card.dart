@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../components/cards/icon_mini_scroll_card.dart' show miniCardItem;
 import '../../components/html_text.dart';
+import '../../components/markdown_body.dart';
 import '../../components/icon_text.dart';
 import '../../components/imageview.dart';
 import '../../components/like_button.dart';
@@ -25,11 +26,13 @@ class FeedCard extends StatelessWidget {
     this.onDelete,
     this.onBlock,
     this.onLike,
+    this.forcePlain = false,
   });
 
   final Datum data;
   final bool isFeedContent;
   final bool isHistory;
+  final bool forcePlain;
   final Function(dynamic id)? onDelete;
   final Function(dynamic uid)? onBlock;
   final Function(dynamic id, dynamic like)? onLike;
@@ -162,11 +165,13 @@ class FeedCard extends StatelessWidget {
                           .forwardSourceFeed!.messageTitle.isNullOrEmpty) ...[
                         htmlText(
                             '<a class="feed-link-uname" href="/u/${data.forwardSourceFeed?.uid}">@${data.forwardSourceFeed?.username}</a>: ${data.forwardSourceFeed?.messageTitle}'),
-                        htmlText(data.forwardSourceFeed?.message ?? ''),
+                        FeedText(data.forwardSourceFeed?.message ?? '',
+                            preview: true),
                       ],
                       if (data.forwardSourceFeed!.messageTitle.isNullOrEmpty)
-                        htmlText(
-                            '<a class="feed-link-uname" href="/u/${data.forwardSourceFeed?.uid}">@${data.forwardSourceFeed?.username}</a>: ${data.forwardSourceFeed?.message}'),
+                        FeedText(
+                            '<a class="feed-link-uname" href="/u/${data.forwardSourceFeed?.uid}">@${data.forwardSourceFeed?.username}</a>:\n${data.forwardSourceFeed?.message}',
+                            preview: true),
                       if (!data.forwardSourceFeed!.picArr.isNullOrEmpty) ...[
                         const SizedBox(height: 10),
                         LayoutBuilder(
@@ -343,10 +348,12 @@ class FeedCard extends StatelessWidget {
           top: 5,
           right: isFeedContent ? 16 : 10,
         ),
-        child: htmlText(
+        child: FeedText(
           data.message.orEmpty,
           fontSize: 16,
-          onClick: _onViewFeed,
+          preview: !isFeedContent,
+          forcePlain: forcePlain,
+          picArr: data.picArr,
         ),
       )
     ];

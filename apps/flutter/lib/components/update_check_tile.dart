@@ -17,6 +17,9 @@ class AppUpdates {
   static Future<void>? _active;
   static Future<void>? _manualQueued;
   static (BuildContext, UpdateService?)? _manualRequest;
+  static bool _hasShownDialog = false;
+  static bool get hasShownDialog => _hasShownDialog;
+  static bool get isActive => _active != null;
 
   static Future<void> _open(BuildContext context, Uri uri,
       {Uri? fallback}) async {
@@ -65,6 +68,7 @@ class AppUpdates {
               !updater.preferences.enabled)) return;
       if (result.status == UpdateStatus.available) {
         final release = result.release!;
+        _hasShownDialog = true;
         final action = await showDialog<UpdateAction>(
             context: context,
             builder: (_) => AppUpdateDialog(

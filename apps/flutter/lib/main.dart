@@ -13,7 +13,8 @@ import 'package:window_manager/window_manager.dart';
 
 import 'components/custom_toast.dart';
 import 'components/app_keyboard_navigation.dart';
-import 'components/update_check_tile.dart';
+import 'components/announcement_monitor.dart';
+import 'logic/announcements/app_announcements.dart';
 import 'constants/constants.dart';
 import 'logic/network/request.dart';
 import 'pages/webview/captcha_page.dart';
@@ -37,6 +38,7 @@ void main() async {
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
+    await windowManager.setTitle('c001apk M3E');
     // The native runner starts on the primary display. Keep sizing and
     // positioning there so mixed-DPI monitors do not mix logical coordinates.
     final display = await screenRetriever.getPrimaryDisplay();
@@ -58,6 +60,7 @@ void main() async {
   }
 
   await GStorage.init();
+  await AppAnnouncements.initialize();
   HttpOverrides.global = CustomHttpOverrides();
 
   if (Platform.isAndroid || Platform.isIOS) {
@@ -77,11 +80,10 @@ void main() async {
   final links = Platform.isAndroid
       ? (AndroidLinks(onOpen: Utils.onOpenLink)..listen())
       : null;
-  runApp(const C001APKAPP());
+  runApp(AnnouncementMonitor(
+      service: AppAnnouncements.service!, child: const C001APKAPP()));
   WidgetsBinding.instance.addPostFrameCallback((_) {
     if (links != null) unawaited(links.ready());
-    final context = Get.context;
-    if (context != null) unawaited(AppUpdates.check(context, automatic: true));
   });
 }
 

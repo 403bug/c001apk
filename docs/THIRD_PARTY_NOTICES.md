@@ -2,6 +2,13 @@
 
 本项目保留原有 [LICENSE](../LICENSE) 与上游署名。
 
+2026-10-23，基础 Markdown 显示新增直接依赖
+[`markdown` 7.3.1](https://pub.dev/packages/markdown/versions/7.3.1)，
+由 Dart project authors 以 BSD-3-Clause 许可发布，源码见
+[Dart tools / markdown](https://github.com/dart-lang/tools/tree/main/pkgs/markdown)。
+通过锁定的 pub 包解析常用 Markdown，再由现有 Flutter HTML 组件呈现；
+未复制或修改解析器源码。许可证随 Flutter 依赖收录于应用“开源许可”。
+
 2026-10-22，多列信息流新增直接依赖
 [`flutter_staggered_grid_view` 0.7.0](https://pub.dev/packages/flutter_staggered_grid_view/versions/0.7.0)，
 使用其 `SliverMasonryGrid` 实现按卡片实际高度接续的懒加载瀑布流。

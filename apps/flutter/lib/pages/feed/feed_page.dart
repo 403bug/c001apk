@@ -25,6 +25,8 @@ import '../settings/device_identity_page.dart';
 import '../../utils/device_util.dart';
 import '../../utils/extensions.dart';
 import '../../utils/global_data.dart';
+import '../../utils/markdown_content.dart';
+import '../../components/content_export_button.dart';
 import '../../utils/storage_util.dart';
 import '../../utils/utils.dart';
 
@@ -33,6 +35,7 @@ enum FeedMenuItem {
   Share,
   Fav,
   Block,
+  Source,
   Report;
 
   String get label => switch (this) {
@@ -40,6 +43,7 @@ enum FeedMenuItem {
         FeedMenuItem.Share => '分享',
         FeedMenuItem.Fav => '收藏',
         FeedMenuItem.Block => '屏蔽',
+        FeedMenuItem.Source => '查看原文',
         FeedMenuItem.Report => '举报',
       };
 }
@@ -64,6 +68,17 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
   late final _scrollController = ScrollController();
   late final StreamController<bool> _titleStreamC = StreamController<bool>();
   late bool _visibleTitle = false;
+  bool _showSource = false;
+
+  bool get _hasMarkdown {
+    final state = _feedController.feedState.value;
+    if (state is! Success) return false;
+    final data = state.response as Datum;
+    return MarkdownContent.parse(data.message.orEmpty).isMarkdown ||
+        (_feedController.articleList ?? []).any((part) =>
+            part.type == 'text' &&
+            MarkdownContent.parse(part.message.orEmpty).isMarkdown);
+  }
 
   @override
   void initState() {
@@ -178,6 +193,7 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
             ? FeedCard(
                 data: feedState.response!,
                 isFeedContent: true,
+                forcePlain: _showSource,
                 onLike: (id, like) {
                   if (GlobalData().isLogin) {
                     _feedController.onLike(
@@ -224,6 +240,7 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
                         constraints.maxWidth,
                         _feedController.articleList![index - 1],
                         _feedController.articleImgList!,
+                        forcePlain: _showSource,
                       );
                     });
                   }
@@ -607,6 +624,11 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
                               )
                             : const Icon(Icons.info_outline),
                       ),
+                    ContentExportButton(
+                      feed: (_feedController.feedState.value as Success)
+                          .response as Datum,
+                      articles: _feedController.articleList ?? const [],
+                    ),
                     PopupMenuButton(
                       onSelected: (FeedMenuItem item) {
                         switch (item) {
@@ -649,9 +671,14 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
                               SmartDialog.showToast('当前平台暂不支持此功能');
                             }
                             break;
+                          case FeedMenuItem.Source:
+                            setState(() => _showSource = !_showSource);
+                            break;
                         }
                       },
                       itemBuilder: (BuildContext context) => FeedMenuItem.values
+                          .where((item) =>
+                              item != FeedMenuItem.Source || _hasMarkdown)
                           .map((item) => PopupMenuItem<FeedMenuItem>(
                                 value: item,
                                 child: item == FeedMenuItem.Fav
@@ -664,7 +691,10 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
                                                 ? '取消屏蔽'
                                                 : '屏蔽',
                                           )
-                                        : Text(item.label),
+                                        : item == FeedMenuItem.Source
+                                            ? Text(
+                                                _showSource ? '格式化显示' : '查看原文')
+                                            : Text(item.label),
                               ))
                           .toList(),
                     )

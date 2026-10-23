@@ -11,6 +11,7 @@ import '../../pages/message/message_controller.dart';
 import '../../pages/noitfication/notification_page.dart';
 import '../../utils/extensions.dart';
 import '../../utils/global_data.dart';
+import '../../logic/announcements/app_announcements.dart';
 
 class MessagePage extends StatefulWidget {
   const MessagePage({super.key});
@@ -68,34 +69,42 @@ class _MessagePageState extends State<MessagePage>
         ],
       );
 
-  Widget _messages(BuildContext context) => ExpressiveListSection(
-        padding: EdgeInsets.zero,
-        children: [
-          for (var index = 0; index < _titleList.length; index++)
-            Obx(() => messageThirdCard(
-                  context,
-                  _iconList[index],
-                  _titleList[index],
-                  _messageController.thirdList.getOrNull(index),
-                  () {
-                    if (!GlobalData().isLogin) return;
-                    Get.toNamed('/notification', arguments: {
-                      'type': NotificationType.values[index],
-                      if (index == 4)
-                        'notificationCount':
-                            _messageController.notificationCount.value,
-                      if (index == 4)
-                        'onNotificationsRead': () =>
-                            _messageController.notificationCount.value = null,
-                    });
-                    final count = _messageController.thirdList.getOrNull(index);
-                    if (count != null && count > 0) {
-                      _messageController.thirdList[index] = null;
-                    }
-                  },
-                )),
-        ],
-      );
+  Widget _messages(BuildContext context) {
+    final announcements = AppAnnouncements.service;
+    Widget list() => ExpressiveListSection(
+          padding: EdgeInsets.zero,
+          children: [
+            for (var index = 0; index < _titleList.length; index++)
+              Obx(() => messageThirdCard(
+                    context,
+                    _iconList[index],
+                    _titleList[index],
+                    (_messageController.thirdList.getOrNull(index) ?? 0) +
+                        (index == 4 ? announcements?.unreadCount ?? 0 : 0),
+                    () {
+                      if (!GlobalData().isLogin && index != 4) return;
+                      Get.toNamed('/notification', arguments: {
+                        'type': NotificationType.values[index],
+                        if (index == 4)
+                          'notificationCount':
+                              _messageController.notificationCount.value,
+                        if (index == 4)
+                          'onNotificationsRead': () =>
+                              _messageController.notificationCount.value = null,
+                      });
+                      final count =
+                          _messageController.thirdList.getOrNull(index);
+                      if (count != null && count > 0) {
+                        _messageController.thirdList[index] = null;
+                      }
+                    },
+                  )),
+          ],
+        );
+    return announcements == null
+        ? list()
+        : AnimatedBuilder(animation: announcements, builder: (_, __) => list());
+  }
 
   @override
   Widget build(BuildContext context) {

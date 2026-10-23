@@ -410,19 +410,22 @@ class NetworkRepo {
     required String feedType,
     required int blockStatus,
     required int fromFeedAuthor,
+    bool verify = true,
   }) async {
     return getListData(
-      () => Request().get(Api.getFeedReply, queryParameters: {
-        'id': id,
-        'listType': listType,
-        'page': page,
-        if (!firstItem.isNullOrEmpty) 'firstItem': firstItem,
-        if (!lastItem.isNullOrEmpty) 'lastItem': lastItem,
-        'discussMode': discussMode,
-        'feedType': feedType,
-        'blockStatus': blockStatus,
-        'fromFeedAuthor': fromFeedAuthor,
-      }),
+      () => Request().get(Api.getFeedReply,
+          options: Options(extra: {'skipCaptcha': !verify}),
+          queryParameters: {
+            'id': id,
+            'listType': listType,
+            'page': page,
+            if (!firstItem.isNullOrEmpty) 'firstItem': firstItem,
+            if (!lastItem.isNullOrEmpty) 'lastItem': lastItem,
+            'discussMode': discussMode,
+            'feedType': feedType,
+            'blockStatus': blockStatus,
+            'fromFeedAuthor': fromFeedAuthor,
+          }),
     );
   }
 

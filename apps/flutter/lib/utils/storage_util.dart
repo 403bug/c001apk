@@ -125,7 +125,8 @@ class GStorage {
 
   static Future<void> init() async {
     final Directory dir = await getApplicationSupportDirectory();
-    final path = await resolveHivePath(dir, windows: Platform.isWindows);
+    // Keep preview data isolated from the stable Windows legacy directory.
+    final path = await resolveHivePath(dir, windows: false);
     await Hive.initFlutter(path);
     regAdapter();
     searchHistory = await Hive.openBox('searchHistory');
@@ -178,6 +179,9 @@ class GStorage {
     blackList.close();
     settings.compact();
     settings.close();
+    if (Hive.isBoxOpen('announcements')) {
+      await Hive.box('announcements').close();
+    }
   }
 
   static void fullSetUserAgent() {
