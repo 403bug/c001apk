@@ -6,6 +6,8 @@
 Android 使用 Temurin JDK 17，所有 Flutter 命令从 `apps/flutter/` 执行。
 依赖安装使用 `--enforce-lockfile`，不在云端自动升级依赖；Action 引用固定到完整提交 SHA。
 
+Android 正式构建保留 Flutter 默认的构建前准备，不使用 `--no-pub`：当前 SDK 会在此阶段按 release 模式重新生成原生插件注册，排除 `flutter_native_splash` 等仅开发期使用的插件。前置依赖安装仍强制锁文件，构建后再次检查 `pubspec.lock` 未变；不要手工修改生成的注册文件或将生成工具改为运行时依赖。
+
 Android 安装 API 37（SDK Manager 包名为 `platforms;android-37.0`）、Build Tools 37.0.0、NDK 28.2.13676358，Gradle / AGP / Kotlin 版本及兼容开关见 [开发指南](DEVELOPMENT.md)。2026-10-23 首轮云端构建因旧包名 `platforms;android-37` 不存在而失败，现已按 Google 仓库中的实际包名修正；正式矩阵结果仍以对应 Actions 运行记录为准，下述旧版成功记录不代表新矩阵已通过。
 
 2026-10-16 已实际跑通 [自动构建](https://github.com/TG-Twilight/c001apk/actions/runs/38920141215)

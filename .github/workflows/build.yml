@@ -257,7 +257,10 @@ jobs:
       - name: Build signed APKs
         env:
           REVIA_KS_PASS: ${{ secrets.REVIA_KS_PASS }}
-        run: flutter build apk --release --split-per-abi --no-pub
+        # Release-mode plugin registration must exclude dev-only native plugins.
+        run: |
+          flutter build apk --release --split-per-abi
+          git diff --exit-code -- pubspec.lock
       - name: Verify APK signatures and package each ABI
         run: |
           version=$(sed -n 's/^version: //p' pubspec.yaml | tr -d '\r')
