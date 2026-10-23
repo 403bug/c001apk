@@ -112,6 +112,8 @@ Windows 完整运行目录为 `build/windows/x64/runner/Release/`，分发时一
 EXE、DLL 和 `data/`；Android 分别生成 `build/app/outputs/flutter-apk/` 下的
 `app-arm64-v8a-release.apk`、`app-armeabi-v7a-release.apk`、`app-x86_64-release.apk`。
 
+Android 工程统一设置 `packagingOptions.jniLibs.useLegacyPackaging = true`，本地和 GitHub CI 默认压缩 APK 内的原生 `.so` 库，缩小直接下载的安装包；CI 正式包核验同时检查原生库采用 ZIP Deflate 压缩。安装时 Android 会解压原生库，因此 APK 变小不代表安装后占用同幅度下降。此配置不改变三 ABI 分包、签名或 ELF 对齐要求。
+
 后续发布和 CI 产物按平台、架构分别命名及分发：
 
 | 平台 | 目标架构 | 本项目验证状态 |

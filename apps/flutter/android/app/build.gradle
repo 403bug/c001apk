@@ -43,6 +43,13 @@ android {
         versionName = flutter.versionName
     }
 
+    packagingOptions {
+        jniLibs {
+            // Keep directly distributed APKs small, both locally and in CI.
+            useLegacyPackaging = true
+        }
+    }
+
     signingConfigs {
         if(_hasReleaseSigning) {
             release {

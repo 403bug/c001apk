@@ -274,8 +274,13 @@ jobs:
           import sys, zipfile
           with zipfile.ZipFile(sys.argv[1]) as apk:
               abis = {name.split('/')[1] for name in apk.namelist() if name.endswith('/libapp.so')}
+              uncompressed = [entry.filename for entry in apk.infolist()
+                              if entry.filename.startswith('lib/') and entry.filename.endswith('.so')
+                              and entry.compress_type != zipfile.ZIP_DEFLATED]
           if abis != {sys.argv[2]}:
               raise SystemExit(f'Unexpected APK ABIs: {abis}')
+          if uncompressed:
+              raise SystemExit(f'Native libraries must be compressed: {uncompressed}')
           PY
             cp "$apk" "build/distribution/c001apk-$version-android-$abi.apk"
           done
