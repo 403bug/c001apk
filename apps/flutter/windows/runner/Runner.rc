@@ -97,7 +97,7 @@ BEGIN
             VALUE "InternalName", "c001apk" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 bggRGjQaUbCoE All rights reserved." "\0"
             VALUE "OriginalFilename", "c001apk.exe" "\0"
-            VALUE "ProductName", "c001apk M3E" "\0"
+            VALUE "ProductName", "c001apk" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -38,7 +38,6 @@ void main() async {
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
-    await windowManager.setTitle('c001apk M3E');
     // The native runner starts on the primary display. Keep sizing and
     // positioning there so mixed-DPI monitors do not mix logical coordinates.
     final display = await screenRetriever.getPrimaryDisplay();

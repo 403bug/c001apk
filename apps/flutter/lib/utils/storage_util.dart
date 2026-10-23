@@ -125,8 +125,7 @@ class GStorage {
 
   static Future<void> init() async {
     final Directory dir = await getApplicationSupportDirectory();
-    // Keep preview data isolated from the stable Windows legacy directory.
-    final path = await resolveHivePath(dir, windows: false);
+    final path = await resolveHivePath(dir, windows: Platform.isWindows);
     await Hive.initFlutter(path);
     regAdapter();
     searchHistory = await Hive.openBox('searchHistory');

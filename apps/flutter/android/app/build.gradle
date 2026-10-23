@@ -36,7 +36,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "app.awavenue.c001apk.m3e"
+        applicationId = "app.awavenue.c001apk"
         minSdk = 24
         targetSdk = 37
         versionCode = flutter.versionCode
