@@ -92,6 +92,25 @@ gEd    32 位小写十六进制
 - 是否接受“客户端自行注册设备标识”由维护者判断；实现保持可整体移除，
   见上文“代码位置”一节的停用方式。
 
+## 实测（2026-10-24）
+
+在 Android 9（x86_64 模拟器，`curl` 直连）上按上文格式发出一次随机三值的注册，
+再把它当 `X-App-Device` 首字段打真实接口，三种首字段对比：
+
+| 首字段 | `/v6/feed/replyList` | `/v6/feed/detail` |
+|---|---|---|
+| 抓包原设备串（40 位 hex，并非 DUID） | `err_request_captcha_v2` 403 | 同左 |
+| 本次签发的 DUID | 200，返回 23 条评论 | 200，返回完整正文 |
+| 空 | `err_request_captcha_v2` 403 | 同左 |
+
+即：注册链路、TLS 信任、以及“新标识能直接免验证”三件事都成立；而缺失或失效的首字段
+正好落到 `messageStatus = err_request_captcha_v2`（`captchaField` 为空，走 `validate`
+Cookie 协议），也就是本文“出现人机验证就换号”所依据的信号。
+
+同一次注册的响应还给出 `itime = 604800`（7 天），说明有效窗口由服务端按天决定，
+客户端不做推算，只在被挑战时换号。响应当次是**未压缩**的 JSON（与 zlib 压缩的响应并存），
+解码器两种都接受。
+
 ## 测试
 
 `apps/flutter/test/network/szlm_duid_client_test.dart` 用固定输入校验编码与解码：
