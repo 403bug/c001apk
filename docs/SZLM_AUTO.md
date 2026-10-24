@@ -111,6 +111,11 @@ Cookie 协议），也就是本文“出现人机验证就换号”所依据的�
 客户端不做推算，只在被挑战时换号。响应当次是**未压缩**的 JSON（与 zlib 压缩的响应并存），
 解码器两种都接受。
 
+再用 CI 打出的 debug APK 在同一台设备上验证整条应用内链路：`pm clear` 后冷启动，
+应用自己取到 `DUMqtb1J4vCLYfS5OeVLfgeLAZqlvLqPnogbU` 并写入 Hive 的 `szlmId`，
+`xAppDevice` 新值首字段即该标识；随后打开一条 69 条回复的动态，评论与楼中楼正常加载，
+全程没有人机验证，也不需要手动导入。
+
 ## 测试
 
 `apps/flutter/test/network/szlm_duid_client_test.dart` 用固定输入校验编码与解码：
