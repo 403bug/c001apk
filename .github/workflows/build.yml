@@ -70,6 +70,10 @@ jobs:
       - name: Resolve build date (UTC+8)
         id: version
         run: dart tool/update_build_date.dart
+      - name: Linux test native dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev
       - run: flutter pub get --enforce-lockfile
       - name: Assemble official implementation
         if: env.USE_PRIVATE_EXTENSIONS == 'true'

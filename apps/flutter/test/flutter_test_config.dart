@@ -1,24 +1,12 @@
 import 'dart:async';
-import 'dart:io';
 
-// Existing API tests replace Dio's transport. Identity registration uses a
-// separate HttpClient and must also stay offline unless a test supplies a fake.
-class _OfflineRegistration extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..connectionFactory = (uri, proxyHost, proxyPort) {
-        if (uri.host == 'auni.telecome.cn') {
-          throw const SocketException(
-              'Identity registration is offline in tests');
-        }
-        return Socket.startConnect(
-            proxyHost ?? uri.host, proxyPort ?? uri.port);
-      };
-  }
-}
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+/// Host test runs have no platform plugins, so the sqflite factory has to be
+/// backed by the FFI implementation instead of the mobile plugin. The cache
+/// manager used by CachedNetworkImage opens a database during setup.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
-  HttpOverrides.global = _OfflineRegistration();
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
   await testMain();
 }
