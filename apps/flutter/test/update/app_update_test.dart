@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:c001apk_flutter/constants/app_repository.dart';
 import 'package:c001apk_flutter/logic/app_update/app_release.dart';
 import 'package:c001apk_flutter/logic/app_update/update_preferences.dart';
 import 'package:c001apk_flutter/logic/app_update/update_service.dart';
@@ -12,7 +13,7 @@ import 'package:hive/hive.dart';
 
 Map<String, dynamic> releaseJson({String tag = '1.2.0-release'}) => {
       'tag_name': tag,
-      'html_url': 'https://github.com/TG-Twilight/c001apk/releases/tag/$tag',
+      'html_url': '${AppRepository.releasesUrl}/tag/$tag',
       'draft': false,
       'prerelease': false,
       'body': '修复问题\n新增功能',
@@ -24,13 +25,14 @@ Map<String, dynamic> releaseJson({String tag = '1.2.0-release'}) => {
           'android-x86_64.apk',
           'windows-x86_64.zip',
           'linux-x86_64.tar.gz',
+          'macos-universal.zip',
         ])
           {
             'name': 'c001apk-1.2.0+20261015-$name',
             'state': 'uploaded',
             'size': 1024,
             'browser_download_url':
-                'https://github.com/TG-Twilight/c001apk/releases/download/$tag/c001apk-1.2.0%2B20261015-$name',
+                '${AppRepository.releasesUrl}/download/$tag/c001apk-1.2.0%2B20261015-$name',
           }
       ],
     };
@@ -98,6 +100,7 @@ void main() {
         endsWith('android-armeabi-v7a.apk'));
     expect(release.downloadFor('windows').path, endsWith('windows-x86_64.zip'));
     expect(release.downloadFor('linux').path, endsWith('linux-x86_64.tar.gz'));
+    expect(release.downloadFor('macos').path, endsWith('macos-universal.zip'));
     expect(release.downloadFor('ios'), release.page);
     expect(release.downloadFor('android', abis: ['mips']), release.page);
   });
@@ -217,8 +220,7 @@ void main() {
       () async {
     await service.check();
     final request = adapter.requests.single;
-    expect(request.uri.toString(),
-        'https://api.github.com/repos/TG-Twilight/c001apk/releases/latest');
+    expect(request.uri.toString(), AppRepository.latestReleaseApi);
     expect(request.method, 'GET');
     expect(
         request.headers.keys.map((key) => key.toLowerCase()),

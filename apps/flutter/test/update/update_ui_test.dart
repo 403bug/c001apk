@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:c001apk_flutter/components/update_dialog.dart';
 import 'package:c001apk_flutter/components/update_check_tile.dart';
+import 'package:c001apk_flutter/constants/app_repository.dart';
 import 'package:c001apk_flutter/logic/app_update/app_release.dart';
 import 'package:c001apk_flutter/logic/app_update/update_preferences.dart';
 import 'package:c001apk_flutter/logic/app_update/update_service.dart';
@@ -183,8 +184,7 @@ void main() {
       await waitForUpdateUi(tester, find.text('检查更新'));
       await tester.pumpAndSettle();
       expect(opened, hasLength(2));
-      expect(opened.last,
-          'https://github.com/TG-Twilight/c001apk/releases/tag/1.2.0-release');
+      expect(opened.last, '${AppRepository.releasesUrl}/tag/1.2.0-release');
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }

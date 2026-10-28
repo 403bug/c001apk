@@ -46,6 +46,7 @@ body:
         - Windows
         - Linux
         - iOS
+        - macOS
         - 通用 / 不限定平台
     validations:
       required: true

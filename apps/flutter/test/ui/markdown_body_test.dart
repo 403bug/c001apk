@@ -4,6 +4,7 @@ import 'package:c001apk_flutter/components/markdown_body.dart';
 import 'package:c001apk_flutter/components/cards/feed_card.dart';
 import 'package:c001apk_flutter/logic/model/feed/datum.dart';
 import 'package:c001apk_flutter/components/update_dialog.dart';
+import 'package:c001apk_flutter/constants/app_repository.dart';
 import 'package:c001apk_flutter/logic/app_update/app_release.dart';
 import 'package:c001apk_flutter/utils/markdown_content.dart';
 import 'package:c001apk_flutter/utils/storage_util.dart';
@@ -140,8 +141,7 @@ void main() {
       'draft': false,
       'prerelease': false,
       'tag_name': '1.3.3-release',
-      'html_url':
-          'https://github.com/TG-Twilight/c001apk/releases/tag/1.3.3-release',
+      'html_url': '${AppRepository.releasesUrl}/tag/1.3.3-release',
       'assets': <dynamic>[],
       'body': '## 更新说明\n\n- **修复问题**\n- 更好阅读',
     });

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../constants/app_repository.dart';
 import 'app_release.dart';
 import 'update_preferences.dart';
 
@@ -42,8 +43,7 @@ class UpdateService {
     if (automatic) _automaticChecked = true;
     try {
       final current = await _currentVersion();
-      final response = await _dio.get<dynamic>(
-          'https://api.github.com/repos/TG-Twilight/c001apk/releases/latest',
+      final response = await _dio.get<dynamic>(AppRepository.latestReleaseApi,
           options: Options(headers: {
             'Accept': 'application/vnd.github+json',
             'User-Agent': 'c001apk-update',

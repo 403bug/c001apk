@@ -1,10 +1,10 @@
 # GitHub Actions 云端构建
 
-[返回开发指南](DEVELOPMENT.md) · [查看 Actions](https://github.com/TG-Twilight/c001apk/actions/workflows/build.yml)
+[返回开发指南](DEVELOPMENT.md) · [查看 Actions](https://github.com/403bug/c001apk/actions/workflows/build.yml)
 
 配置入口为 [Build workflow](../.github/workflows/build.yml)。当前本地配置固定 Flutter 3.47.7 / Dart 3.13.5，
 Android 使用 Temurin JDK 17，所有 Flutter 命令从 `apps/flutter/` 执行。
-依赖安装使用 `--enforce-lockfile`，不在云端自动升级依赖；Action 引用固定到完整提交 SHA。
+依赖安装使用 `--enforce-lockfile`，不在云端自动升级依赖；Action 引用固定到完整提交 SHA。所有构建通过 `--dart-define=C001APK_REPOSITORY=${{ github.repository }}` 注入当前仓库，fork 的更新检查、源码链接和设备标识文档会自动指向自己的仓库，不需要改代码。
 
 Android 正式构建保留 Flutter 默认的构建前准备，不使用 `--no-pub`：当前 SDK 会在此阶段按 release 模式重新生成原生插件注册，排除 `flutter_native_splash` 等仅开发期使用的插件。前置依赖安装仍强制锁文件，构建后再次检查 `pubspec.lock` 未变；不要手工修改生成的注册文件或将生成工具改为运行时依赖。
 
@@ -25,6 +25,7 @@ Linux / iOS 运行体验仍待验收。云端 Ubuntu 离线检查 150 项通过�
 - 在 Actions → Build → Run workflow 手动运行，默认 `android_release=true`，生成正式签名 Android APK。
 - Android debug 与 release 均要求项目签名 Secrets，缺少时失败，不回退开发证书。PR 跳过 Android APK 构建，其他检查／平台构建保留。
 - 勾选 `ios` 可额外构建 iOS 真机 arm64 未签名 IPA，附件名称含 `unsigned`；安装前需要自行签名，尚未做 iPhone 实机验收。
+- macOS 与 Windows/Linux 桌面 job 一起自动构建，产出 ad-hoc 签名的通用 zip；不需要 Secrets，首次打开需手动放行，见 [macOS 安装与构建](MACOS.md)。
 
 静态分析遇 error/warning 时失败；既有 info 级命名等提示继续显示，暂不阻断。
 普通测试只使用离线合成夹具，两项在线检查默认跳过。CI 不操作真实账号。
@@ -34,6 +35,7 @@ Linux / iOS 运行体验仍待验收。云端 Ubuntu 离线检查 150 项通过�
 | 离线分析/测试 | `ubuntu-22.04` | 检查日志 |
 | Windows release | `windows-2022` | x86_64 ZIP，包含 EXE、DLL 和完整 `data/` |
 | Linux release | `ubuntu-22.04` | x86_64 tar.gz，包含完整 bundle |
+| macOS release | `macos-14` | arm64 + x86_64 通用 `.app` ZIP，ad-hoc 签名，附 SHA-256 清单 |
 | Android debug | `ubuntu-22.04` | 三 ABI 项目证书 APK，保留 7 天；PR 不构建 |
 | Android release | `ubuntu-22.04` | `arm64-v8a` / `armeabi-v7a` / `x86_64` 正式签名 APK，分别上传 |
 | iOS（可选） | `macos-14` | arm64 未签名 IPA 与 SHA-256 清单，需自行签名 |
@@ -43,7 +45,7 @@ Linux / iOS 运行体验仍待验收。云端 Ubuntu 离线检查 150 项通过�
 内置版本、关于页与 release 文件名使用更新后的同一版本，跨日完成的任务也不会各自换日期。
 此步骤仅修改 runner 工作区，不自动提交回仓库。本地构建可在 `apps/flutter/` 运行同一命令刷新日期。
 桌面运行目录完整打包，Linux 可执行权限通过 tar 保留。
-正式 APK、桌面归档和 iOS 未签名 IPA 提供 SHA-256 文件校验清单，release artifacts 保留 14 天。
+正式 APK、桌面归档、macOS 通用包和 iOS 未签名 IPA 提供 SHA-256 文件校验清单，release artifacts 保留 14 天。
 从运行详情的 Artifacts 下载；此 workflow 不创建 GitHub Release。
 正式版也已由维护者发布至 [1.2.6-release](https://github.com/TG-Twilight/c001apk/releases/tag/1.2.6-release)，
 包含同次成功构建的六份分发包与统一校验清单，下载不受 Actions artifacts 保留天数影响。
@@ -53,8 +55,15 @@ Linux / iOS 运行体验仍待验收。云端 Ubuntu 离线检查 150 项通过�
 因此以 `20261016` 为基础时，APK 的实际编码分别为 `20262016`、`20263016`、`20265016`，
 `versionName` 均为 `1.2.6`；文件名仍使用 pubspec 版本。后续版本编码维护应沿用这一分包规则。
 
-桌面 ARM64 不列入当前目标，升级工具链不自动扩大原有 Windows/Linux x86_64 发布矩阵；
-原生插件与 ARM64 运行尚未验证。移动端 arm64 不受这一决定影响。
+Windows/Linux 桌面仍只发布 x86_64，不扩大到 ARM64 矩阵；原生插件与 ARM64 运行尚未验证。移动端 arm64 不受这一决定影响。macOS 采用 arm64 + x86_64 通用包，以同时覆盖 Apple Silicon 与 Intel。
+
+## macOS 包
+
+`macos` job 在 `macos-14` 上构建 macOS 12+ 通用包，校验 arm64 / x86_64 切片、`LSMinimumSystemVersion` 和沙箱 entitlements 后，用 `ditto` 打包为 `c001apk-<版本>-macos-universal.zip`，并附 `SHA256SUMS.txt`。
+
+2026-10-28 首次云端构建通过（[run 40691461698](https://github.com/403bug/c001apk/actions/runs/40691461698)）：产物 SHA-256、arm64 / x86_64、12.0 部署目标和沙箱 entitlements 均通过校验，并已下载启动验证。
+
+当前使用 ad-hoc 签名，不需要 Secrets，也不做 Apple 公证。下载后首次打开需要在“系统设置 → 隐私与安全性”中放行，或执行 `xattr -cr`；步骤与限制见 [macOS 安装与构建](MACOS.md)。接入 Developer ID + notarization 后才能做到直接双击打开。
 
 ## Android 正式签名
 

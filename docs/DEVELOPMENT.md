@@ -33,17 +33,19 @@ c001apk/
 “检查已安装应用更新”独立。存储与更新、关于页均可手动检查，手动操作不受
 自动开关、跳过版本或稍后提醒影响。自动检查失败不打扰，手动失败显示中文原因。
 
-更新来源为 `TG-Twilight/c001apk` 的 GitHub Latest 正式 Release；
-不检测 Actions artifacts、草稿或预发布版本。按语义版本比较，兼容
+更新来源由构建时的 `C001APK_REPOSITORY`（`owner/repo`）决定：CI 自动传入
+`${{ github.repository }}`，本地可用 `dart tool/build_release.dart <平台> --release`
+从 `origin` 识别，未传入时默认为 `403bug/c001apk`。查询对应仓库的 GitHub Latest
+正式 Release；不检测 Actions artifacts、草稿或预发布版本。按语义版本比较，兼容
 `1.1.0-release` / `v1.2.0` 标签，不比较 Release 时间或 Android ABI 版本码。
 同一语义版本重新构建不触发更新提示，发布修订版时应提升语义版本。
 
 弹窗展示版本、发布日期、完整可滚动说明和发布页入口，底部只提供“稍后”
 （结束本次提醒，下次冷启动继续检测）、“跳过”（当前版本）、“更新”。自动检测仅在设置中关闭。
 关闭弹窗等同稍后，旧版24小时检测/稍后时间戳不再拦截启动检测。Android 按设备支持 ABI 匹配 APK，Windows/Linux
-匹配现有 x86_64 ZIP/tar.gz；没有匹配资产时打开该 Release 页面。
+匹配现有 x86_64 ZIP/tar.gz，macOS 匹配 `macos-universal.zip`；没有匹配资产时打开该 Release 页面。
 下载通过系统浏览器进行，资产链接打开失败会尝试发布页，不自动覆盖安装。
-iOS 当前没有可安装正式包，只打开发布页面。
+iOS 当前没有可安装正式包，只打开发布页面。关于页源码链接、设备标识导入文档和公告地址同样由 `C001APK_REPOSITORY` 派生；公告地址可用 `C001APK_ANNOUNCEMENTS_REPOSITORY` 单独覆盖，fork 没有 `announcements` 分支时公告条目为空，不影响其他功能。
 
 实现位于 `lib/logic/app_update/` 和 `lib/components/update_*.dart`，
 使用独立 Dio，不加入酷安拦截器、Cookie、账号 Token 或设备签名。
@@ -76,7 +78,7 @@ powershell -NoProfile -File tool/windows_close_smoke.ps1 `
 此脚本会实际启动及关闭桌面窗口，检查退出码和系统错误弹窗事件。运行前关闭已有实例；还需手动复核打开网页登录、取消后关闭，以及直接在网页登录页关闭窗口。
 
 ```powershell
-git clone https://github.com/TG-Twilight/c001apk.git
+git clone https://github.com/403bug/c001apk.git
 cd c001apk/apps/flutter
 
 flutter doctor -v
@@ -104,9 +106,11 @@ Windows 产物位于 `apps/flutter/build/windows/x64/runner/Debug/`，Android �
 从 `apps/flutter/` 执行：
 
 ```powershell
-flutter build windows --release
-flutter build apk --release --split-per-abi
+dart tool/build_release.dart windows --release
+dart tool/build_release.dart apk --release --split-per-abi
 ```
+
+`tool/build_release.dart` 会从 `origin` 识别仓库并注入 `C001APK_REPOSITORY`；直接运行 `flutter build` 时使用默认仓库 `403bug/c001apk`，CI 使用 `${{ github.repository }}`。
 
 Windows 完整运行目录为 `build/windows/x64/runner/Release/`，分发时一起打包
 EXE、DLL 和 `data/`；Android 分别生成 `build/app/outputs/flutter-apk/` 下的
@@ -122,8 +126,24 @@ Android 工程统一设置 `packagingOptions.jniLibs.useLegacyPackaging = true`�
 | Linux | `x86_64` | 云端 release 已构建，下载包已复核；运行体验待验收 |
 | Android | `arm64-v8a`、`armeabi-v7a`、`x86_64` | 云端独立 APK 已构建、下载验签；结果见 Actions |
 | iOS | `arm64`（真机） | 云端未签名 IPA 构建、架构与校验值检查已通过；Apple 签名与真机运行待实施 |
+| macOS | `arm64` + `x86_64` | 本地与云端 release 已构建；CI 产物已下载并启动验证；ad-hoc 签名，首次打开需手动放行 |
 
-桌面 `x86_32` 和 ARM64 不列入本轮发布矩阵。
+桌面 `x86_32` 和 ARM64 不列入本轮发布矩阵；macOS 例外，通用包同时覆盖 Apple Silicon 与 Intel。
+
+### macOS 构建
+
+macOS 需要 Xcode 15 及以上与 CocoaPods。`macos/Podfile`、`Podfile.lock` 以及 Xcode 的 CocoaPods / Swift Package 集成已提交；首次 `pod install` 会从 CocoaPods trunk 拉取 `OrderedSet`，需要网络。如果 `pub.flutter-io.cn` 镜像不可用，可改用官方源：
+
+```bash
+cd apps/flutter
+PUB_HOSTED_URL=https://pub.dev flutter pub get --enforce-lockfile
+flutter build macos --release
+open build/macos/Build/Products/Release
+```
+
+Release 产物为 `build/macos/Build/Products/Release/c001apk.app`，默认同时包含 `arm64` 与 `x86_64`。部署目标为 macOS 12.0；沙箱需要 `com.apple.security.network.client` 与 `com.apple.security.files.user-selected.read-write`。
+
+当前使用 ad-hoc 签名，没有 Apple 公证。自己构建的包可直接运行；从 GitHub 下载的包首次打开需要在“系统设置 → 隐私与安全性”中放行，或执行 `xattr -cr`。安装、校验与已知限制见 [macOS 安装与构建](MACOS.md)。
 桌面 `x86_64` 通常也称 x64/amd64，`aarch64` 通常也称 ARM64；Android 使用其 ABI 命名。
 本项目继续只维护 Windows/Linux x86_64 发布矩阵；升级 Flutter 不自动扩大架构范围。
 桌面 ARM64 的插件兼容性与实际运行尚未验证。
@@ -249,6 +269,6 @@ Android 的 Flutter 默认深链处理保持关闭，避免完整外部 URI 被�
 
 ## 参与维护
 
-欢迎提交 [Issue](https://github.com/TG-Twilight/c001apk/issues) 或 Pull Request。反馈问题时请提供平台、应用版本、复现步骤与脱敏错误信息，避免附带密码、Cookie、用户 Token 或私信内容。
+欢迎提交 [Issue](https://github.com/403bug/c001apk/issues) 或 Pull Request。反馈问题时请提供平台、应用版本、复现步骤与脱敏错误信息，避免附带密码、Cookie、用户 Token 或私信内容。
 
 API 修改请区分网络错误、HTTP 状态、业务拒绝、验证码和模型解析错误，并保留离线回归。修改存储时保留用户历史、收藏与设置；修改模型时使用生成器更新 `*.g.dart`。

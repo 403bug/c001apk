@@ -6,10 +6,14 @@ on:
     paths:
       - 'apps/flutter/**'
       - '.github/workflows/**'
+      - '.github/actions/**'
+      - 'private-extensions.lock.json'
   pull_request:
     paths:
       - 'apps/flutter/**'
       - '.github/workflows/**'
+      - '.github/actions/**'
+      - 'private-extensions.lock.json'
   workflow_dispatch:
     inputs:
       android_release:
@@ -20,6 +24,11 @@ on:
         description: 'Also build an unsigned iOS arm64 IPA (requires your own signing)'
         type: boolean
         default: false
+      implementation:
+        description: 'Official private implementation or public basic implementation'
+        type: choice
+        options: [official, public]
+        default: official
 
 permissions:
   contents: read
@@ -30,6 +39,10 @@ concurrency:
 
 env:
   FLUTTER_VERSION: '3.47.7'
+  # Every fork builds against its own repository: update checks, source links
+  # and documentation links are derived from this at compile time.
+  C001APK_REPOSITORY: ${{ github.repository }}
+  USE_PRIVATE_EXTENSIONS: ${{ github.repository == 'TG-Twilight/c001apk' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.event_name != 'workflow_dispatch' || inputs.implementation != 'public') }}
 
 defaults:
   run:
@@ -46,6 +59,9 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - name: Validate official build branch
+        if: github.repository == 'TG-Twilight/c001apk' && github.event_name == 'workflow_dispatch' && inputs.implementation != 'public' && github.ref != 'refs/heads/main'
+        run: echo 'Official implementation builds require the main branch'; exit 1
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -54,7 +70,16 @@ jobs:
       - name: Resolve build date (UTC+8)
         id: version
         run: dart tool/update_build_date.dart
+      - name: Linux test native dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev
       - run: flutter pub get --enforce-lockfile
+      - name: Assemble official implementation
+        if: env.USE_PRIVATE_EXTENSIONS == 'true'
+        uses: ./.github/actions/private-extensions
+        with:
+          private-key: ${{ secrets.PRIVATE_EXTENSIONS_DEPLOY_KEY }}
       - name: Analyze (errors and warnings fail; existing info lints remain visible)
         run: flutter analyze --no-pub --no-fatal-infos
       - name: Offline regression tests
@@ -90,7 +115,12 @@ jobs:
       - name: Sync build date
         run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
       - run: flutter pub get --enforce-lockfile
-      - run: flutter build ${{ matrix.platform }} --release --no-pub
+      - name: Assemble official implementation
+        if: env.USE_PRIVATE_EXTENSIONS == 'true'
+        uses: ./.github/actions/private-extensions
+        with:
+          private-key: ${{ secrets.PRIVATE_EXTENSIONS_DEPLOY_KEY }}
+      - run: flutter build ${{ matrix.platform }} --release --no-pub --dart-define=C001APK_REPOSITORY=${{ env.C001APK_REPOSITORY }}
       - name: Package Windows runtime
         if: runner.os == 'Windows'
         shell: pwsh
@@ -132,6 +162,58 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  macos:
+    name: macOS universal release
+    needs: checks
+    runs-on: macos-14
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Sync build date
+        run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
+      - run: flutter pub get --enforce-lockfile
+      - name: Assemble official implementation
+        if: env.USE_PRIVATE_EXTENSIONS == 'true'
+        uses: ./.github/actions/private-extensions
+        with:
+          private-key: ${{ secrets.PRIVATE_EXTENSIONS_DEPLOY_KEY }}
+      - run: flutter build macos --release --no-pub --dart-define=C001APK_REPOSITORY=${{ env.C001APK_REPOSITORY }}
+      - name: Verify macOS bundle
+        run: |
+          app=build/macos/Build/Products/Release/c001apk.app
+          lipo "$app/Contents/MacOS/c001apk" -verify_arch arm64
+          lipo "$app/Contents/MacOS/c001apk" -verify_arch x86_64
+          test "$(plutil -extract LSMinimumSystemVersion raw "$app/Contents/Info.plist")" = "12.0"
+          entitlements=$(codesign -d --entitlements :- "$app" 2>/dev/null)
+          printf '%s' "$entitlements" | grep -q com.apple.security.network.client
+          printf '%s' "$entitlements" | grep -q com.apple.security.files.user-selected.read-write
+          codesign --verify --deep --strict "$app"
+      - name: Package macOS app
+        run: |
+          version=$(sed -n 's/^version: //p' pubspec.yaml | tr -d '\r')
+          mkdir -p build/distribution
+          archive="c001apk-$version-macos-universal.zip"
+          ditto -c -k --keepParent build/macos/Build/Products/Release/c001apk.app "build/distribution/$archive"
+          (cd build/distribution && shasum -a 256 "$archive" > SHA256SUMS.txt)
+      - name: Record first-launch note
+        run: |
+          echo 'macOS build is ad-hoc signed and not notarized. On first launch, allow it in System Settings > Privacy & Security, or run "xattr -cr /Applications/c001apk.app".' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: c001apk-macos-universal-release
+          path: |
+            apps/flutter/build/distribution/*-macos-universal.zip
+            apps/flutter/build/distribution/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+
   android-debug:
     name: Android debug (project certificate)
     # Pull requests skip Android signing; never expose signing Secrets to PR code.
@@ -167,6 +249,11 @@ jobs:
       - name: Sync build date
         run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
       - run: flutter pub get --enforce-lockfile
+      - name: Assemble official implementation
+        if: env.USE_PRIVATE_EXTENSIONS == 'true'
+        uses: ./.github/actions/private-extensions
+        with:
+          private-key: ${{ secrets.PRIVATE_EXTENSIONS_DEPLOY_KEY }}
       - name: Restore and verify project keystore
         env:
           KEYSTORE: ${{ runner.temp }}/c001apk-signing/release.jks
@@ -185,7 +272,7 @@ jobs:
       - name: Build project-signed debug APKs
         env:
           REVIA_KS_PASS: ${{ secrets.REVIA_KS_PASS }}
-        run: flutter build apk --debug --split-per-abi --no-pub
+        run: flutter build apk --debug --split-per-abi --no-pub --dart-define=C001APK_REPOSITORY=${{ env.C001APK_REPOSITORY }}
       - name: Verify debug APK certificates
         run: |
           for abi in arm64-v8a armeabi-v7a x86_64; do
@@ -239,6 +326,11 @@ jobs:
       - name: Sync build date
         run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
       - run: flutter pub get --enforce-lockfile
+      - name: Assemble official implementation
+        if: env.USE_PRIVATE_EXTENSIONS == 'true'
+        uses: ./.github/actions/private-extensions
+        with:
+          private-key: ${{ secrets.PRIVATE_EXTENSIONS_DEPLOY_KEY }}
       - name: Restore and verify release keystore
         env:
           KEYSTORE: ${{ runner.temp }}/c001apk-signing/release.jks
@@ -259,7 +351,7 @@ jobs:
           REVIA_KS_PASS: ${{ secrets.REVIA_KS_PASS }}
         # Release-mode plugin registration must exclude dev-only native plugins.
         run: |
-          flutter build apk --release --split-per-abi
+          flutter build apk --release --split-per-abi --dart-define=C001APK_REPOSITORY=${{ env.C001APK_REPOSITORY }}
           git diff --exit-code -- pubspec.lock
       - name: Verify APK signatures and package each ABI
         run: |
@@ -337,7 +429,12 @@ jobs:
       - name: Sync build date
         run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
       - run: flutter pub get --enforce-lockfile
-      - run: flutter build ios --release --no-codesign --no-pub
+      - name: Assemble official implementation
+        if: env.USE_PRIVATE_EXTENSIONS == 'true'
+        uses: ./.github/actions/private-extensions
+        with:
+          private-key: ${{ secrets.PRIVATE_EXTENSIONS_DEPLOY_KEY }}
+      - run: flutter build ios --release --no-codesign --no-pub --dart-define=C001APK_REPOSITORY=${{ env.C001APK_REPOSITORY }}
       - name: Check arm64 binary
         run: |
           xcrun lipo build/ios/iphoneos/Runner.app/Runner -verify_arch arm64

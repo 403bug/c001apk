@@ -1,3 +1,5 @@
+import '../../constants/app_repository.dart';
+
 /// Only stable semantic versions participate in public release checks.
 class AppVersion implements Comparable<AppVersion> {
   const AppVersion(this.major, this.minor, this.patch);
@@ -38,7 +40,7 @@ class AppRelease {
   final String notes;
   final DateTime? publishedAt;
   final Map<String, Uri> _assets;
-  static const _repository = '/TG-Twilight/c001apk/releases/';
+  static const _repository = AppRepository.releasePathPrefix;
 
   static bool _trusted(Uri uri, String prefix) =>
       uri.scheme == 'https' &&
@@ -96,6 +98,7 @@ class AppRelease {
           .toList(),
       'windows' => ['windows-x86_64.zip'],
       'linux' => ['linux-x86_64.tar.gz'],
+      'macos' => ['macos-universal.zip'],
       _ => <String>[],
     };
     for (final suffix in suffixes) {
