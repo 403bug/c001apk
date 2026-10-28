@@ -83,8 +83,8 @@ PUB_HOSTED_URL=https://pub.dev flutter pub get --enforce-lockfile
 
 ```bash
 app=build/macos/Build/Products/Release/c001apk.app
-lipo -verify_arch arm64 "$app/Contents/MacOS/c001apk"
-lipo -verify_arch x86_64 "$app/Contents/MacOS/c001apk"
+lipo "$app/Contents/MacOS/c001apk" -verify_arch arm64
+lipo "$app/Contents/MacOS/c001apk" -verify_arch x86_64
 plutil -extract LSMinimumSystemVersion raw "$app/Contents/Info.plist"   # 12.0
 codesign -d --entitlements :- "$app" 2>/dev/null
 codesign --verify --deep --strict "$app"
