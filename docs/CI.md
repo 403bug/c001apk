@@ -61,6 +61,8 @@ Windows/Linux 桌面仍只发布 x86_64，不扩大到 ARM64 矩阵；原生插�
 
 `macos` job 在 `macos-14` 上构建 macOS 12+ 通用包，校验 arm64 / x86_64 切片、`LSMinimumSystemVersion` 和沙箱 entitlements 后，用 `ditto` 打包为 `c001apk-<版本>-macos-universal.zip`，并附 `SHA256SUMS.txt`。
 
+2026-10-28 首次云端构建通过（[run 40691461698](https://github.com/403bug/c001apk/actions/runs/40691461698)）：产物 SHA-256、arm64 / x86_64、12.0 部署目标和沙箱 entitlements 均通过校验，并已下载启动验证。
+
 当前使用 ad-hoc 签名，不需要 Secrets，也不做 Apple 公证。下载后首次打开需要在“系统设置 → 隐私与安全性”中放行，或执行 `xattr -cr`；步骤与限制见 [macOS 安装与构建](MACOS.md)。接入 Developer ID + notarization 后才能做到直接双击打开。
 
 ## Android 正式签名

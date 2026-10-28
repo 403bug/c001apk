@@ -126,7 +126,7 @@ Android 工程统一设置 `packagingOptions.jniLibs.useLegacyPackaging = true`�
 | Linux | `x86_64` | 云端 release 已构建，下载包已复核；运行体验待验收 |
 | Android | `arm64-v8a`、`armeabi-v7a`、`x86_64` | 云端独立 APK 已构建、下载验签；结果见 Actions |
 | iOS | `arm64`（真机） | 云端未签名 IPA 构建、架构与校验值检查已通过；Apple 签名与真机运行待实施 |
-| macOS | `arm64` + `x86_64` | 本地 release 已构建并启动验证；云端构建待首次运行确认；ad-hoc 签名，首次打开需手动放行 |
+| macOS | `arm64` + `x86_64` | 本地与云端 release 已构建；CI 产物已下载并启动验证；ad-hoc 签名，首次打开需手动放行 |
 
 桌面 `x86_32` 和 ARM64 不列入本轮发布矩阵；macOS 例外，通用包同时覆盖 Apple Silicon 与 Intel。
 
