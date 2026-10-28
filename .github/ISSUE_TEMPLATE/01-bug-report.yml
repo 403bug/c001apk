@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        这是作者个人维护的 vibe coding 项目，优先 Android 与 Windows。提交反馈不等于承诺修复或排期。
+        这是作者个人维护的 vibe coding 项目，优先 Android、Windows；macOS 端由本分支适配。提交反馈不等于承诺修复或排期。
 
         请报告实际测到的现象。其他项目的 issue 只能作为线索，不能代替本项目的复现，也不能直接当作根因结论。
         对厂商 ROM、旧系统、第三方模块或服务端限制导致的问题，作者可能不提供兼容；系统或上游已有修复时，请优先升级复测。本项目不承诺为个别环境加入影响全体用户的全局兜底。
@@ -52,6 +52,7 @@ body:
         - Windows
         - Linux
         - iOS
+        - macOS
         - 其他（请说明）
     validations:
       required: true
@@ -59,10 +60,11 @@ body:
     id: environment
     attributes:
       label: 设备与完整系统版本
-      description: Android 请写厂商 ROM 及完整版本号，不要只写“Android 15”。如使用第三方 ROM、模块或修改版，请如实说明。
+      description: Android 请写厂商 ROM 及完整版本号，不要只写“Android 15”；macOS 请写完整系统版本与芯片（Apple Silicon / Intel）。如使用第三方 ROM、模块或修改版，请如实说明。
       placeholder: |
-        设备型号：
-        系统 / ROM 完整版本：
+        设备型号 / Mac 机型：
+        系统完整版本：
+        macOS 芯片（Apple Silicon / Intel，非 macOS 留空）：
         第三方模块、修改或其他来源说明（无则写无）：
         相关显示环境（如小窗 / 分屏 / 横屏，或桌面窗口大小、屏幕缩放）：
     validations:
