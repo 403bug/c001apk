@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
+import '../../constants/app_repository.dart';
 import 'builtin_filter_rules.dart';
 import 'content_filter_engine.dart';
 import 'content_filter_rule.dart';
@@ -72,8 +73,7 @@ class ContentFilterService extends ChangeNotifier {
     _rebuildEngines();
   }
 
-  static const rulesUrl =
-      'https://raw.githubusercontent.com/TG-Twilight/c001apk/filters/rules.json';
+  static const rulesUrl = AppRepository.filtersUrl;
   static const maxDownloadBytes = 1024 * 1024;
   final Box<dynamic> _box;
   final Dio _dio;

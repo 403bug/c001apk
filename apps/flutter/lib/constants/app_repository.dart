@@ -34,4 +34,15 @@ class AppRepository {
 
   static const String announcementsBase =
       'https://raw.githubusercontent.com/$announcementsSlug/announcements/announcements/';
+
+  /// Content-filter rules default to [slug]; a fork without a `filters`
+  /// branch keeps using the bundled rule set. Override with
+  /// `C001APK_FILTERS_REPOSITORY` when the rules live elsewhere.
+  static const String filtersSlug = String.fromEnvironment(
+    'C001APK_FILTERS_REPOSITORY',
+    defaultValue: slug,
+  );
+
+  static const String filtersUrl =
+      'https://raw.githubusercontent.com/$filtersSlug/filters/rules.json';
 }
