@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
+import '../../constants/app_repository.dart';
 import 'announcement.dart';
 
 enum SyncReason { coldStart, resume, inbox, manual }
@@ -19,9 +20,7 @@ class AnnouncementService extends ChangeNotifier {
                 connectTimeout: const Duration(seconds: 8),
                 receiveTimeout: const Duration(seconds: 8))),
         _clock = clock ?? DateTime.now,
-        baseUri = baseUri ??
-            Uri.parse(
-                'https://raw.githubusercontent.com/TG-Twilight/c001apk/announcements/announcements/') {
+        baseUri = baseUri ?? Uri.parse(AppRepository.announcementsBase) {
     final state = _box.get('state');
     if (state is Map) {
       try {

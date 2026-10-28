@@ -1,8 +1,10 @@
+import '../constants/app_repository.dart';
+
 /// The official "复制 OAID" action includes this field after five taps.
 /// OAID, AndroidID and UUID are deliberately not accepted as substitutes.
 class OfficialDeviceIdentity {
   static const guideUrl =
-      'https://github.com/TG-Twilight/c001apk/blob/main/docs/DEVICE_ID_IMPORT.md';
+      '${AppRepository.pageUrl}/blob/main/docs/DEVICE_ID_IMPORT.md';
 
   static final _valuePattern = RegExp(r'^[A-Za-z0-9_+/.=-]{8,4096}$');
 

@@ -4,9 +4,9 @@
 
 ## 公告来源与维护
 
-公告数据单独保存在本仓库的 [announcements 分支](https://github.com/TG-Twilight/c001apk/tree/announcements)，根目录 README 有完整发布说明。正文与索引在该分支的 announcements/ 目录；应用代码继续保存在 main，不把测试公告作为应用内置内容。公告更新不需要重新构建应用。2026-10-23 已按用户授权建立目录并发布第一篇明确标注的测试公告，提交 8c35603；不改 main／Release／workflow，分支无工作流且现有构建仅监听 main 的应用／workflow 路径。
+公告数据单独保存在构建仓库的 `announcements` 分支（默认 `403bug/c001apk`；CI 构建自动跟随当前 fork），根目录 README 有完整发布说明。正文与索引在该分支的 announcements/ 目录；应用代码继续保存在 main，不把测试公告作为应用内置内容。公告更新不需要重新构建应用。`announcements` 分支是可选的：fork 未建立该分支时公告列表为空，其他功能不受影响；如需继续沿用上游公告，可在构建时单独传入 `--dart-define=C001APK_ANNOUNCEMENTS_REPOSITORY=TG-Twilight/c001apk`。2026-10-23 已按用户授权在上游仓库建立目录并发布第一篇明确标注的测试公告，提交 8c35603；不改 main／Release／workflow，分支无工作流且现有构建仅监听 main 的应用／workflow 路径。
 
-客户端入口为 [index.json](https://raw.githubusercontent.com/TG-Twilight/c001apk/announcements/announcements/index.json)。schemaVersion=1，revision 每次变更递增，announcements 是完整列表。每项含 id、title、summary、publishedAt（带时区）、contentRevision、reminderRevision、important、path、sha256；可选 withdrawn、expiresAt。ID 永不复用于其他公告；正文路径限本目录 Markdown，SHA256 为原文件字节摘要。
+客户端入口为构建仓库 `announcements` 分支下的 `announcements/index.json`（默认 [index.json](https://raw.githubusercontent.com/403bug/c001apk/announcements/announcements/index.json)）。schemaVersion=1，revision 每次变更递增，announcements 是完整列表。每项含 id、title、summary、publishedAt（带时区）、contentRevision、reminderRevision、important、path、sha256；可选 withdrawn、expiresAt。ID 永不复用于其他公告；正文路径限本目录 Markdown，SHA256 为原文件字节摘要。
 
 - 发布新公告：新增 ID、Markdown 文件、索引条目，并提高顶层 revision。
 - 正文修订：提高 contentRevision，更换正文文件名、SHA256，提高顶层 revision；普通纠错保留 reminderRevision，不重复提醒。

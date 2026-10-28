@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import 'app_repository.dart';
+
 class Constants {
   static const APP_NAME = 'c001apk';
 
@@ -38,7 +40,7 @@ class Constants {
   static const LOADING_FAILED = 'FAILED';
   static const URL_COOLAPK = 'https://www.coolapk.com/';
   static const URL_LOGIN = 'https://account.coolapk.com/auth/login?type=mobile';
-  static const URL_SOURCE_CODE = 'https://github.com/TG-Twilight/c001apk';
+  static const URL_SOURCE_CODE = AppRepository.pageUrl;
   static const URL_UPSTREAM =
       'https://github.com/bggRGjQaUbCoE/c001apk-flutter';
   static const URL_API_SERVICE = 'https://api.coolapk.com';
