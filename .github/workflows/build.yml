@@ -93,7 +93,7 @@ jobs:
       - name: Sync build date
         run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
       - run: flutter pub get --enforce-lockfile
-      - run: flutter build ${{ matrix.platform }} --release --no-pub --dart-define=C001APK_REPOSITORY=$C001APK_REPOSITORY
+      - run: flutter build ${{ matrix.platform }} --release --no-pub --dart-define=C001APK_REPOSITORY=${{ env.C001APK_REPOSITORY }}
       - name: Package Windows runtime
         if: runner.os == 'Windows'
         shell: pwsh
@@ -152,7 +152,7 @@ jobs:
       - name: Sync build date
         run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
       - run: flutter pub get --enforce-lockfile
-      - run: flutter build macos --release --no-pub --dart-define=C001APK_REPOSITORY=$C001APK_REPOSITORY
+      - run: flutter build macos --release --no-pub --dart-define=C001APK_REPOSITORY=${{ env.C001APK_REPOSITORY }}
       - name: Verify macOS bundle
         run: |
           app=build/macos/Build/Products/Release/c001apk.app
@@ -235,7 +235,7 @@ jobs:
       - name: Build project-signed debug APKs
         env:
           REVIA_KS_PASS: ${{ secrets.REVIA_KS_PASS }}
-        run: flutter build apk --debug --split-per-abi --no-pub --dart-define=C001APK_REPOSITORY=$C001APK_REPOSITORY
+        run: flutter build apk --debug --split-per-abi --no-pub --dart-define=C001APK_REPOSITORY=${{ env.C001APK_REPOSITORY }}
       - name: Verify debug APK certificates
         run: |
           for abi in arm64-v8a armeabi-v7a x86_64; do
@@ -309,7 +309,7 @@ jobs:
           REVIA_KS_PASS: ${{ secrets.REVIA_KS_PASS }}
         # Release-mode plugin registration must exclude dev-only native plugins.
         run: |
-          flutter build apk --release --split-per-abi --dart-define=C001APK_REPOSITORY=$C001APK_REPOSITORY
+          flutter build apk --release --split-per-abi --dart-define=C001APK_REPOSITORY=${{ env.C001APK_REPOSITORY }}
           git diff --exit-code -- pubspec.lock
       - name: Verify APK signatures and package each ABI
         run: |
@@ -387,7 +387,7 @@ jobs:
       - name: Sync build date
         run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
       - run: flutter pub get --enforce-lockfile
-      - run: flutter build ios --release --no-codesign --no-pub --dart-define=C001APK_REPOSITORY=$C001APK_REPOSITORY
+      - run: flutter build ios --release --no-codesign --no-pub --dart-define=C001APK_REPOSITORY=${{ env.C001APK_REPOSITORY }}
       - name: Check arm64 binary
         run: |
           xcrun lipo build/ios/iphoneos/Runner.app/Runner -verify_arch arm64
