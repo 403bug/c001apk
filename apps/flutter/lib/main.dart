@@ -50,8 +50,10 @@ void main() async {
           bounds.height.clamp(0, 540).toDouble()),
       size: bounds.size,
       skipTaskbar: false,
-      titleBarStyle:
-          Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal,
+      // Use the native title bar on every desktop. On macOS a hidden title
+      // bar with full-size content puts the traffic lights on top of the
+      // app's own header and navigation rail.
+      titleBarStyle: TitleBarStyle.normal,
     );
     await windowManager.waitUntilReadyToShow(windowOptions);
     await windowManager.setPosition(bounds.topLeft);
